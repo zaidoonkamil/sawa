@@ -105,7 +105,11 @@ router.post("/login", upload.none(), async (req, res) => {
         id: user.id,
         name: user.name,
         email: user.email,
-        sawa: user.sawa
+        sawa: user.sawa,
+        role: user.role,
+        location: user.location,
+        Jewel: user.Jewel,
+        dolar: user.dolar
       },
       token
     });
