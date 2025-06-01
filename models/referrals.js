@@ -14,7 +14,7 @@ const Referral = sequelize.define("Referral", {
   referredUserId: {
     type: DataTypes.INTEGER,
     allowNull: false,
-    unique: true, // عشان كل مستخدم يسجل مرة وحدة فقط
+    unique: true,
   },
 }, {
   timestamps: true,

@@ -59,78 +59,64 @@ router.post("/users", upload.none() ,async (req, res) => {
 });
 
 router.post("/login", upload.none(), async (req, res) => {
-    const { email, password, refId } = req.body;
+  const { email, password, refId } = req.body;
 
-    try {
-        if (refId) {
-            // تحقق من وجود صديق بهذا الرمز
-            const friend = await User.findOne({ where: { id: refId } });
-            if (!friend) {
-                return res.status(400).json({ error: "Invalid friend code" });
-            }
-
-            // تحقق هل المستخدم هذا مسجّل قبل عن طريق هذا الكود
-            const alreadyReferred = await Referrals.findOne({
-                where: { referredUserId: refId }
-            });
-
-            if (alreadyReferred) {
-                return res.status(400).json({ error: "You already used a referral code before." });
-            }
-
-            friend.sawa += 20;
-            await friend.save();
-
-            await Referrals.create({
-                referrerId: friend.id,
-                referredUserId: refId
-            });
-
-            return res.status(201).json({
-                message: "20 sawa added to your friend's account 🎉",
-                friend: {
-                    id: friend.id,
-                    name: friend.name,
-                    sawa: friend.sawa
-                }
-            });
-        }
-
-        const user = await User.findOne({ where: { email } });
-        if (!user) {
-            return res.status(400).json({ error: "Invalid email" });
-        }
-
-        const isPasswordValid = await bcrypt.compare(password, user.password);
-        if (!isPasswordValid) {
-            return res.status(400).json({ error: "Invalid password" });
-        }
-
-        const token = generateToken(user);
-
-        res.status(201).json({
-            message: "Login successful",
-            user: {
-                id: user.id,
-                name: user.name,
-                email: user.email,
-                phone: user.phone,
-                location: user.location,
-                role: user.role,
-                Jewel: user.Jewel,
-                sawa: user.sawa,
-                dolar: user.dolar,
-                createdAt: user.createdAt,
-                updatedAt: user.updatedAt
-            },
-            token: token
-        });
-
-    } catch (err) {
-        console.error("❌ Error logging in:", err);
-        res.status(500).json({ error: "Internal Server Error" });
+  try {
+    const user = await User.findOne({ where: { email } });
+    if (!user) {
+      return res.status(400).json({ error: "Invalid email" });
     }
+
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+    if (!isPasswordValid) {
+      return res.status(400).json({ error: "Invalid password" });
+    }
+
+    // تحقق هل سبق استخدم إحالة
+    const alreadyReferred = await Referrals.findOne({
+      where: { referredUserId: user.id }
+    });
+
+    // لو refId موجود وما سبق استخدم إحالة
+    if (refId && !alreadyReferred) {
+      const friend = await User.findOne({ where: { id: refId } });
+      if (friend) {
+        friend.sawa += 20;
+        await friend.save();
+
+        await Referrals.create({
+          referrerId: friend.id,
+          referredUserId: user.id
+        });
+      }
+    }
+
+    const token = generateToken(user);
+
+    res.status(201).json({
+      message: "Login successful",
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        phone: user.phone,
+        location: user.location,
+        role: user.role,
+        Jewel: user.Jewel,
+        sawa: user.sawa,
+        dolar: user.dolar,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt
+      },
+      token: token
+    });
+
+  } catch (err) {
+    console.error("❌ Error logging in:", err);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
 });
+
 
 router.get("/users", async (req, res) => {
     try {
@@ -170,7 +156,6 @@ router.get("/users/:id" ,async (req,res)=>{
     }
     }
 );
-
 
 router.delete("/users/:id", async (req, res) => {
     const { id } = req.params;
