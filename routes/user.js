@@ -72,18 +72,24 @@ router.post("/login", upload.none(), async (req, res) => {
       return res.status(400).json({ error: "Invalid password" });
     }
 
-    // تحقق هل سبق استخدم إحالة
-    const alreadyReferred = await Referrals.findOne({
-      where: { referredUserId: user.id }
-    });
-
-    // لو refId موجود وما سبق استخدم إحالة
-    if (refId && !alreadyReferred) {
+    // تحقق من refId إذا كان موجود
+    if (refId) {
       const friend = await User.findOne({ where: { id: refId } });
-      if (friend) {
+      if (!friend) {
+        return res.status(400).json({ error: "Invalid referral code" });
+      }
+
+      // تحقق هل المستخدم استخدم إحالة قبل
+      const alreadyReferred = await Referrals.findOne({
+        where: { referredUserId: user.id }
+      });
+
+      if (!alreadyReferred) {
+        // أضف 20 لصاحب الكود
         friend.sawa += 20;
         await friend.save();
 
+        // سجل إحالة هذا المستخدم
         await Referrals.create({
           referrerId: friend.id,
           referredUserId: user.id
@@ -93,22 +99,15 @@ router.post("/login", upload.none(), async (req, res) => {
 
     const token = generateToken(user);
 
-    res.status(201).json({
+    res.status(200).json({
       message: "Login successful",
       user: {
         id: user.id,
         name: user.name,
         email: user.email,
-        phone: user.phone,
-        location: user.location,
-        role: user.role,
-        Jewel: user.Jewel,
-        sawa: user.sawa,
-        dolar: user.dolar,
-        createdAt: user.createdAt,
-        updatedAt: user.updatedAt
+        sawa: user.sawa
       },
-      token: token
+      token
     });
 
   } catch (err) {
@@ -116,6 +115,7 @@ router.post("/login", upload.none(), async (req, res) => {
     res.status(500).json({ error: "Internal Server Error" });
   }
 });
+
 
 
 router.get("/users", async (req, res) => {
