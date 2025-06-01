@@ -132,7 +132,6 @@ router.post("/login", upload.none(), async (req, res) => {
     }
 });
 
-// Endpoint للحصول على جميع المستخدمين
 router.get("/users", async (req, res) => {
     try {
         const users = await User.findAll(); 
@@ -159,11 +158,6 @@ router.get("/profile", authenticateToken, async (req, res) => {
 
 router.get("/users/:id", authenticateToken ,async (req,res)=>{
     const {id} = req.params;
-
-    // التحقق من أن المستخدم الذي يحاول الوصول إلى البيانات هو نفس المستخدم الذي يتم جلب بياناته
-    if (req.user.id !== parseInt(id)) {
-        return res.status(403).json({ error: "Access denied, you are not authorized to view this user's data" });
-    }
 
     try{
         const user = await User.findByPk(id);
