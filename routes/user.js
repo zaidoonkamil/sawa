@@ -155,7 +155,6 @@ router.get("/profile", authenticateToken, async (req, res) => {
     }
 });
 
-
 router.get("/users/:id", authenticateToken ,async (req,res)=>{
     const {id} = req.params;
 
