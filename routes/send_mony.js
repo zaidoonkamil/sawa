@@ -2,8 +2,7 @@ const express = require('express');
 const router = express.Router();
 const multer = require("multer");
 const upload = multer();
-
-
+const User = require('../models/user');
 
 router.post("/sendmony", upload.none(), async (req, res) => {
     const { senderId, receiverId, receiverEmail, amount } = req.body;
@@ -109,7 +108,7 @@ router.post("/deposit-jewel", upload.none(), async (req, res) => {
 });
 
 router.post("/deposit-sawa", upload.none(), async (req, res) => {
-    const { userId, userEmail, amount } = req.body;
+    const { userId, amount } = req.body;
 
     try {
         const depositAmount = parseFloat(amount);
@@ -120,7 +119,7 @@ router.post("/deposit-sawa", upload.none(), async (req, res) => {
 
         // جلب المستخدم
         const user = await User.findOne({
-            where: userId ? { id: userId } : { email: userEmail }
+            where: { id: userId }
         });
 
         if (!user) {
