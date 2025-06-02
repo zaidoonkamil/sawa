@@ -5,7 +5,7 @@ const upload = multer();
 const User = require('../models/user');
 
 router.post("/sendmony", upload.none(), async (req, res) => {
-    const { senderId, receiverId, receiverEmail, amount } = req.body;
+    const { senderId, receiverId, amount } = req.body;
 
     try {
         const transferAmount = parseFloat(amount);
@@ -30,7 +30,7 @@ router.post("/sendmony", upload.none(), async (req, res) => {
 
         // جلب المستقبل
         const receiver = await User.findOne({
-            where: receiverId ? { id: receiverId } : { email: receiverEmail }
+            where: { id: receiverId }
         });
 
         if (!receiver) {
