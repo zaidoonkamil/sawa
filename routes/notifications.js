@@ -32,7 +32,7 @@ router.post("/register-device", async (req, res) => {
         res.status(500).json({ error: "حدث خطأ أثناء تسجيل الجهاز" });
     }
 });
-
+/*
 router.post('/send-notification', upload.none(), (req, res) => {
     const { title, message } = req.body;
 
@@ -126,7 +126,7 @@ router.get('/notification/:userId', async (req, res) => {
     res.status(500).json({ error: "خطأ أثناء جلب الإشعارات" });
   }
 });
-
+*/
 
 
 module.exports = router;
