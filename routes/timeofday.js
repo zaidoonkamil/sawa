@@ -10,7 +10,7 @@ router.get("/", (req, res) => {
 
     let period;
 
-    if (hours >= 5 && hours < 17) {
+    if (hours >= 5 && hours < 18) {
         period = "morning";
     } else {
         period = "night";
