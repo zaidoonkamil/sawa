@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 
-router.get("/timeofday", (req, res) => {
+router.get("/", (req, res) => {
     const now = new Date();
 
     const hours = now.getHours();
