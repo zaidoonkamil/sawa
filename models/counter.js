@@ -7,10 +7,6 @@ const Counter = sequelize.define("Counter", {
         autoIncrement: true,
         primaryKey: true,
     },
-    name: {
-        type: DataTypes.STRING,
-        allowNull: false,
-    },
     points: {
         type: DataTypes.INTEGER,
         allowNull: false,

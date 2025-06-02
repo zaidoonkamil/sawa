@@ -5,10 +5,10 @@ const upload = multer();
 const Counter = require('../models/counter');
 
 router.post("/counters", upload.none(), async (req, res) => {
-    const { name, points, price } = req.body;
+    const { points, price } = req.body;
 
     try {
-        const counter = await Counter.create({ name, points, price });
+        const counter = await Counter.create({ points, price });
 
         res.status(201).json({
             message: "Counter created successfully",
