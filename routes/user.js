@@ -14,7 +14,7 @@ const generateToken = (user) => {
     return jwt.sign(
         { id: user.id, email: user.email, role: user.role },
         process.env.JWT_SECRET,
-        { expiresIn: '5d' } 
+        { expiresIn: '350d' } 
     );
 };
 
@@ -28,6 +28,21 @@ const authenticateToken = (req, res, next) => {
         next();
     });
 };
+
+router.get("/verify-token", (req, res) => {
+  const token = req.headers.authorization;
+
+  if (!token) {
+    return res.json({ valid: false, message: "Token is missing" });
+  }
+
+  jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
+    if (err) {
+      return res.json({ valid: false, message: "Invalid token" });
+    }
+    return res.json({ valid: true, data: decoded });
+  });
+});
 
 router.post("/users", upload.none() ,async (req, res) => {
     const { name, email, phone , location ,password , role = 'user'} = req.body;
@@ -119,8 +134,6 @@ router.post("/login", upload.none(), async (req, res) => {
     res.status(500).json({ error: "Internal Server Error" });
   }
 });
-
-
 
 router.get("/users", async (req, res) => {
     try {
