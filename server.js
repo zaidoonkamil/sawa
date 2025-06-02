@@ -20,9 +20,9 @@ sequelize.sync({
 
 
 app.use("/", usersRouter);
-app.use("/sendmoney", sendmonyRouter);
+app.use("/", sendmonyRouter);
 app.use("/timeofday", timeOfDayRouter);
-app.use("/counter", counterRouter);
+app.use("/", counterRouter);
 
 
 app.listen( 3000 , () => {
