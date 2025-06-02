@@ -6,7 +6,7 @@ const upload = multer();
 
 
 router.post("/sendmony", upload.none(), async (req, res) => {
-    const { senderId, senderEmail, receiverId, receiverEmail, amount } = req.body;
+    const { senderId, receiverId, receiverEmail, amount } = req.body;
 
     try {
         const transferAmount = parseFloat(amount);
@@ -17,7 +17,7 @@ router.post("/sendmony", upload.none(), async (req, res) => {
 
         // جلب المرسل
         const sender = await User.findOne({
-            where: senderId ? { id: senderId } : { email: senderEmail }
+            where: { id: senderId }
         });
 
         if (!sender) {
