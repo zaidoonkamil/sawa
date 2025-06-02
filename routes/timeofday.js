@@ -3,6 +3,7 @@ const router = express.Router();
 
 router.get("/", (req, res) => {
     const now = new Date();
+    const saTime = new Date(now.toLocaleString("en-US", { timeZone: "Asia/Baghdad" }));
 
     const hours = now.getHours();
     const minutes = now.getMinutes();
