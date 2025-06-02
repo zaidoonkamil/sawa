@@ -38,7 +38,7 @@ const sendNotification = (message, heading) => {
             console.error('❌ Error sending notification:', error.response ? error.response.data : error.message);
         });
 };
-
+/*
 const sendNotificationToRole = async (role, message, title = "Notification") => {
   if (!message) throw new Error("message مطلوب");
   if (!role) throw new Error("role مطلوب");
@@ -115,10 +115,10 @@ const sendNotificationToUser = async (userId, message, title = "إشعار جد�
     return { success: false, error: error.message };
   }
 };
-
+*/
 
 module.exports = {
   sendNotification,
-  sendNotificationToRole,
-  sendNotificationToUser,
+  //sendNotificationToRole,
+  //sendNotificationToUser,
 };
