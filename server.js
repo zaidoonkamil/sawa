@@ -4,6 +4,8 @@ const usersRouter = require("./routes/user");
 const timeOfDayRouter = require("./routes/timeofday.js");
 const sendmonyRouter = require("./routes/send_mony.js");
 const counterRouter = require("./routes/counter.js");
+const notifications = require("./routes/notifications");
+
 require("./cron");
 
 
@@ -23,6 +25,7 @@ app.use("/", usersRouter);
 app.use("/", sendmonyRouter);
 app.use("/timeofday", timeOfDayRouter);
 app.use("/", counterRouter);
+app.use("/", notifications);
 
 
 app.listen( 3000 , () => {
