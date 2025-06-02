@@ -32,7 +32,7 @@ router.post("/register-device", async (req, res) => {
         res.status(500).json({ error: "حدث خطأ أثناء تسجيل الجهاز" });
     }
 });
-/*
+
 router.post('/send-notification', upload.none(), (req, res) => {
     const { title, message } = req.body;
 
@@ -92,41 +92,6 @@ router.post('/send-notification-to-role', upload.none(), async (req, res) => {
     return res.status(500).json({ error: 'حدث خطأ أثناء إرسال الإشعار' });
   }
 });
-
-
-router.get('/notification/:userId', async (req, res) => {
-  const { userId } = req.params;
-  const page = parseInt(req.query.page) || 1;  
-  const limit = parseInt(req.query.limit) || 10; 
-  const offset = (page - 1) * limit;            
-
-  try {
-    const { count, rows } = await Notification.findAndCountAll({
-      where: { user_id: userId },
-      order: [['createdAt', 'DESC']],
-      limit: limit,
-      offset: offset
-    });
-
-    const totalPages = Math.ceil(count / limit);
-
-    res.json({
-      success: true,
-      data: rows,
-      pagination: {
-        total: count,
-        totalPages: totalPages,
-        currentPage: page,
-        perPage: limit
-      }
-    });
-    
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: "خطأ أثناء جلب الإشعارات" });
-  }
-});
-*/
 
 
 module.exports = router;
