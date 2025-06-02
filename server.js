@@ -4,7 +4,7 @@ const usersRouter = require("./routes/user");
 const timeOfDayRouter = require("./routes/timeofday.js");
 const sendmonyRouter = require("./routes/send_mony.js");
 const counterRouter = require("./routes/counter.js");
-const notifications = require("./routes/notifications");
+const notifications = require("./routes/notifications.js");
 
 require("./cron");
 
