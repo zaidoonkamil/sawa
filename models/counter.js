@@ -14,6 +14,7 @@ const Counter = sequelize.define("Counter", {
     type: {
         type: DataTypes.ENUM("points", "gems"),
         allowNull: false,
+          defaultValue: "points"
     },
     price: {
         type: DataTypes.DOUBLE,
