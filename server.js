@@ -1,3 +1,4 @@
+require("./models/agent");
 const express = require("express");
 const sequelize = require("./config/db");
 const usersRouter = require("./routes/user");
