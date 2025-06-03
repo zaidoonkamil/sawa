@@ -5,7 +5,11 @@ const upload = multer();
 const Counter = require('../models/counter');
 
 router.post("/counters", upload.none(), async (req, res) => {
-    const { points, price } = req.body;
+    const { type, points, price } = req.body;
+
+    if (!["points", "gems"].includes(type)) {
+        return res.status(400).json({ error: "type يجب أن يكون 'points' أو 'gems'" });
+    }
 
     try {
         const counter = await Counter.create({ points, price });
