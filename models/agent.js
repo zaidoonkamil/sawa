@@ -27,6 +27,7 @@ const Agent = sequelize.define("Agent", {
 
 }, {
     timestamps: true,
+    tableName: 'agents' 
 });
 
 
