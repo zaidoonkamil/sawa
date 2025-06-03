@@ -37,9 +37,9 @@ router.get("/counters", async (req, res) => {
 });
 
 router.post("/assign-counter", async (req, res) => {
-  const { userId, counterId, quantity } = req.body;
+  const { userId, counterId } = req.body;
 
-  if (!userId || !counterId || !quantity) {
+  if (!userId || !counterId) {
     return res.status(400).json({ error: "يجب توفير userId, counterId, quantity" });
   }
 
@@ -50,7 +50,7 @@ router.post("/assign-counter", async (req, res) => {
     const counter = await Counter.findByPk(counterId);
     if (!counter) return res.status(404).json({ error: "العداد غير موجود" });
 
-    const assign = await UserCounter.create({ userId, counterId, quantity });
+    const assign = await UserCounter.create({ userId, counterId });
 
     res.status(201).json({
       message: "تم إضافة العداد للمستخدم",

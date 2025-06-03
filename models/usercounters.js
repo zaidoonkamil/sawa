@@ -17,16 +17,9 @@ const UserCounter = sequelize.define("UserCounter", {
         type: DataTypes.INTEGER,
         allowNull: false,
     },
-    lastCollectedAt: {
-        type: DataTypes.DATE,
-        allowNull: false,
-        defaultValue: DataTypes.NOW
-    }
 }, {
     timestamps: true,
 });
 
-User.hasMany(UserCounter, { foreignKey: "userId" });
-Counter.hasMany(UserCounter, { foreignKey: "counterId" });
 
 module.exports = UserCounter;
