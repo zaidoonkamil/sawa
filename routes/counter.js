@@ -40,7 +40,7 @@ router.post("/assign-counter", upload.none(), async (req, res) => {
   const { userId, counterId } = req.body;
 
   if (!userId || !counterId) {
-    return res.status(400).json({ error: "يجب توفير userId, counterId, quantity" });
+    return res.status(400).json({ error: "يجب توفير userId, counterId" });
   }
 
   try {

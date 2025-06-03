@@ -9,6 +9,8 @@ const dotenv = require('dotenv');
 dotenv.config();
 const multer = require("multer");
 const upload = multer();
+const UserCounter = require("../models/usercounters");
+const Counter = require("../models/counter");
 
 const generateToken = (user) => {
     return jwt.sign(
