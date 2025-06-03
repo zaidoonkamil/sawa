@@ -35,6 +35,4 @@ router.get("/counters", async (req, res) => {
 });
 
 
-
-
 module.exports = router;

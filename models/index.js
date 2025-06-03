@@ -1,6 +1,7 @@
 const User = require("./user");
 const Counter = require("./counter");
 const UserCounter = require("./usercounters");
+const NotificationLog = require("./notification_log");
 
 // علاقات
 User.hasMany(UserCounter, { foreignKey: "userId" });

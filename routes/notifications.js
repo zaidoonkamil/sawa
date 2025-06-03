@@ -7,6 +7,8 @@ const upload = multer();
 const UserDevice = require("../models/user_device");
 const User = require("../models/user");
 const axios = require('axios');
+const NotificationLog = require("../models/notification_log");
+const { Op } = require("sequelize");
 
 
 router.post("/register-device", async (req, res) => {
@@ -90,6 +92,50 @@ router.post('/send-notification-to-role', upload.none(), async (req, res) => {
   } catch (error) {
     console.error(`❌ Error sending notification to role ${role}:`, error.response ? error.response.data : error.message);
     return res.status(500).json({ error: 'حدث خطأ أثناء إرسال الإشعار' });
+  }
+});
+
+router.get("/notifications-log", async (req, res) => {
+  const { user_id, role, page = 1, limit = 10 } = req.query;
+
+  try {
+    let whereCondition = {};
+
+    if (user_id) {
+      whereCondition = {
+        [Op.or]: [
+          { target_type: 'all' },
+          { target_type: 'user', target_value: user_id }
+        ]
+      };
+    } else if (role) {
+      whereCondition = {
+        [Op.or]: [
+          { target_type: 'all' },
+          { target_type: 'role', target_value: role }
+        ]
+      };
+    }
+
+    const offset = (page - 1) * limit;
+
+    const { count, rows: logs } = await NotificationLog.findAndCountAll({
+      where: whereCondition,
+      order: [['createdAt', 'DESC']],
+      limit: parseInt(limit),
+      offset: parseInt(offset),
+    });
+
+    res.json({
+      total: count,
+      page: parseInt(page),
+      totalPages: Math.ceil(count / limit),
+      logs
+    });
+
+  } catch (err) {
+    console.error("❌ Error fetching notification logs:", err);
+    res.status(500).json({ error: "خطأ أثناء جلب السجل" });
   }
 });
 
