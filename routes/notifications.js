@@ -63,13 +63,21 @@ router.post('/send-notification-to-role', upload.none(), async (req, res) => {
     const devices = await UserDevice.findAll({
       include: [{
         model: User,
-        where: { role: role }
+        where: { role }
       }]
     });
 
     const playerIds = devices.map(device => device.player_id);
 
     if (playerIds.length === 0) {
+      // نسجل محاولة إرسال فاشلة
+      await NotificationLog.create({
+        title: title || "Notification",
+        message,
+        target_type: "role",
+        target_value: role,
+        status: "failed"
+      });
       return res.status(404).json({ error: `لا توجد أجهزة للمستخدمين برول ${role}` });
     }
 
@@ -87,34 +95,45 @@ router.post('/send-notification-to-role', upload.none(), async (req, res) => {
 
     await axios.post(url, data, { headers });
 
+    // نسجل الإشعار المرسل
+    await NotificationLog.create({
+      title: title || "Notification",
+      message,
+      target_type: "role",
+      target_value: role,
+      status: "sent"
+    });
+
     return res.json({ success: true, message: `تم إرسال الإشعار لجميع المستخدمين برول ${role}` });
 
   } catch (error) {
     console.error(`❌ Error sending notification to role ${role}:`, error.response ? error.response.data : error.message);
+    
+    // نسجل الخطأ في قاعدة البيانات
+    await NotificationLog.create({
+      title: title || "Notification",
+      message,
+      target_type: "role",
+      target_value: role,
+      status: "failed"
+    });
+
     return res.status(500).json({ error: 'حدث خطأ أثناء إرسال الإشعار' });
   }
 });
 
 router.get("/notifications-log", async (req, res) => {
-  const { user_id, role, page = 1, limit = 10 } = req.query;
+  const { role, page = 1, limit = 10 } = req.query;
 
   try {
-    let whereCondition = {};
+    const whereCondition = {
+      [Op.or]: [
+        { target_type: 'all' },
+      ]
+    };
 
-    if (user_id) {
-      whereCondition = {
-        [Op.or]: [
-          { target_type: 'all' },
-          { target_type: 'user', target_value: user_id }
-        ]
-      };
-    } else if (role) {
-      whereCondition = {
-        [Op.or]: [
-          { target_type: 'all' },
-          { target_type: 'role', target_value: role }
-        ]
-      };
+    if (role) {
+      whereCondition[Op.or].push({ target_type: 'role', target_value: role });
     }
 
     const offset = (page - 1) * limit;
