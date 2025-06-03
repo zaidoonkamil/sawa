@@ -12,7 +12,7 @@ router.post("/counters", upload.none(), async (req, res) => {
     }
 
     try {
-        const counter = await Counter.create({ points, price });
+        const counter = await Counter.create({ type, points, price });
 
         res.status(201).json({
             message: "Counter created successfully",
