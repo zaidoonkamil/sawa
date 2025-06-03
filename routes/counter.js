@@ -36,7 +36,7 @@ router.get("/counters", async (req, res) => {
     }
 });
 
-router.post("/assign-counter", async (req, res) => {
+router.post("/assign-counter", upload.none(), async (req, res) => {
   const { userId, counterId } = req.body;
 
   if (!userId || !counterId) {
