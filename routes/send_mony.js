@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const multer = require("multer");
 const upload = multer();
-const { User, DailyAction } = require("../models");
+const { User, DailyAction, UserCounter } = require("../models");
 
 
 router.post("/daily-action", upload.none(), async (req, res) => {
