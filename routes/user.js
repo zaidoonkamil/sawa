@@ -185,12 +185,36 @@ router.get("/profile", authenticateToken, async (req, res) => {
       return res.status(404).json({ error: "User not found" });
     }
 
-    res.status(200).json(user);
+    // تجهيز counters مع المدة المتبقية
+    const countersWithRemainingDays = user.UserCounters.map(counter => {
+      const endDate = new Date(counter.endDate);
+      const now = new Date();
+      const diffInMs = endDate - now;
+      const diffInDays = Math.ceil(diffInMs / (1000 * 60 * 60 * 24));
+
+      return {
+        id: counter.id,
+        counterId: counter.counterId,
+        startDate: counter.startDate,
+        endDate: counter.endDate,
+        remainingDays: diffInDays > 0 ? diffInDays : 0, // لو منتهي صفر
+        counter: counter.Counter
+      };
+    });
+
+    res.status(200).json({
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      counters: countersWithRemainingDays
+    });
+
   } catch (err) {
     console.error("Error fetching user:", err);
     res.status(500).json({ error: "Internal Server Error" });
   }
 });
+
 
 
 router.get("/users/:id" ,async (req,res)=>{
