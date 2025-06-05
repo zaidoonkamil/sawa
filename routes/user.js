@@ -13,7 +13,7 @@ const UserCounter = require("../models/usercounters");
 const Counter = require("../models/counter");
 
 
-router.put("/users/:id/gems", async (req, res) => {
+router.put("/users/:id/gems", upload.none(), async (req, res) => {
   const { id } = req.params;
   const { gems } = req.body;
 
