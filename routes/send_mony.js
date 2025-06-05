@@ -33,18 +33,30 @@ router.post("/daily-action", upload.none(), async (req, res) => {
         });
       }
 
-      // تحديث وقت العملية
       dailyAction.lastActionTime = now;
       await dailyAction.save();
     } else {
-      // أول مرة للمستخدم — ننشئ سجل جديد
       await DailyAction.create({
         user_id,
         lastActionTime: now,
       });
     }
 
-    res.json({ success: true, message: "✅ تم تنفيذ العملية بنجاح" });
+    // فحص وجود عداد للمستخدم
+    const userCounters = await UserCounter.findAll({ where: { userId: user_id } });
+
+    if (userCounters.length === 0) {
+      // إذا ما عنده عداد، نزود 100 جوهرة
+      user.Jewel += 100;
+      await user.save();
+    }
+
+    res.json({ 
+      success: true, 
+      message: "✅ تم تنفيذ العملية بنجاح", 
+      jewelsAdded: userCounters.length === 0 ? 100 : 0,
+      newJewelBalance: user.Jewel
+    });
 
   } catch (error) {
     console.error(error);
