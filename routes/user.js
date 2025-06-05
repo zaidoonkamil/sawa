@@ -35,7 +35,6 @@ router.put("/users/:id/gems", upload.none(), async (req, res) => {
 });
 
 
-
 const generateToken = (user) => {
     return jwt.sign(
         { id: user.id, email: user.email, role: user.role },

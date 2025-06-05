@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const multer = require("multer");
 const upload = multer();
-const User = require('../models/user');
+const { User, DailyAction } = require("../models");
 
 router.post("/sendmony", upload.none(), async (req, res) => {
     const { senderId, receiverId, amount } = req.body;
@@ -220,6 +220,54 @@ router.post("/buy-counter", upload.none(), async (req, res) => {
         console.error("❌ Error buying counter:", err);
         res.status(500).json({ error: "Internal Server Error" });
     }
+});
+
+
+router.post("/daily-action", async (req, res) => {
+  const { user_id } = req.body;
+
+  if (!user_id) {
+    return res.status(400).json({ error: "user_id مطلوب" });
+  }
+
+  try {
+    const user = await User.findByPk(user_id);
+    if (!user) {
+      return res.status(404).json({ error: "المستخدم غير موجود" });
+    }
+
+    const now = new Date();
+
+    let dailyAction = await DailyAction.findOne({ where: { user_id } });
+
+    if (dailyAction) {
+      const lastTime = new Date(dailyAction.lastActionTime);
+      const diffInMs = now - lastTime;
+      const diffInHours = diffInMs / (1000 * 60 * 60);
+
+      if (diffInHours < 24) {
+        return res.status(400).json({
+          error: `يمكنك المحاولة مجددًا بعد ${24 - diffInHours.toFixed(2)} ساعة`,
+        });
+      }
+
+      // تحديث وقت العملية
+      dailyAction.lastActionTime = now;
+      await dailyAction.save();
+    } else {
+      // أول مرة للمستخدم — ننشئ سجل جديد
+      await DailyAction.create({
+        user_id,
+        lastActionTime: now,
+      });
+    }
+
+    res.json({ success: true, message: "✅ تم تنفيذ العملية بنجاح" });
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "حدث خطأ أثناء تنفيذ العملية" });
+  }
 });
 
 
