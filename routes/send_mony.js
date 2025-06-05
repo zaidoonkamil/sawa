@@ -223,7 +223,7 @@ router.post("/buy-counter", upload.none(), async (req, res) => {
 });
 
 
-router.post("/daily-action", async (req, res) => {
+router.post("/daily-action", upload.none(), async (req, res) => {
   const { user_id } = req.body;
 
   if (!user_id) {
