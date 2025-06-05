@@ -34,8 +34,6 @@ router.put("/users/:id/gems", upload.none() , async (req, res) => {
   }
 });
 
-
-
 const generateToken = (user) => {
     return jwt.sign(
         { id: user.id, email: user.email, role: user.role },
@@ -54,6 +52,51 @@ const authenticateToken = (req, res, next) => {
         next();
     });
 };
+
+router.get("/profile", authenticateToken, async (req, res) => {
+  try {
+    const user = await User.findByPk(req.user.id, {
+      include: [
+        {
+          model: UserCounter,
+          include: [Counter],
+        }
+      ]
+    });
+
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    const userData = user.toJSON();
+
+    userData.UserCounters = userData.UserCounters.map(counter => {
+      if (counter.endDate) {
+        const now = new Date();
+        const endDate = new Date(counter.endDate);
+        const diffInMs = endDate - now;
+        const diffInDays = Math.ceil(diffInMs / (1000 * 60 * 60 * 24));
+
+        return {
+          ...counter,
+          remainingDays: diffInDays > 0 ? diffInDays : 0
+        };
+      } else {
+        return {
+          ...counter,
+          remainingDays: null // لو ما فيه endDate
+        };
+      }
+    });
+
+    res.status(200).json(userData);
+
+  } catch (err) {
+    console.error("Error fetching user:", err);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
 
 router.get("/verify-token", (req, res) => {
   const token = req.headers.authorization;
@@ -171,51 +214,6 @@ router.get("/users", async (req, res) => {
     }
 });
 
-router.get("/profile", authenticateToken, async (req, res) => {
-  try {
-    const user = await User.findByPk(req.user.id, {
-      include: [
-        {
-          model: UserCounter,
-          attributes: ['id', 'userId', 'counterId', 'startDate', 'endDate', 'createdAt', 'updatedAt'],
-          include: [Counter],
-        }
-      ]
-    });
-
-    if (!user) {
-      return res.status(404).json({ error: "User not found" });
-    }
-
-    // تحويل JSON كامل + حساب عدد الأيام المتبقية مع كل UserCounter
-    const userData = user.toJSON();
-
-    userData.UserCounters = userData.UserCounters.map(counter => {
-      if (counter.endDate) {
-        const now = new Date();
-        const endDate = new Date(counter.endDate);
-        const diffInMs = endDate - now;
-        const diffInDays = Math.ceil(diffInMs / (1000 * 60 * 60 * 24));
-
-        return {
-          ...counter,
-          remainingDays: diffInDays > 0 ? diffInDays : 0
-        };
-      } else {
-        return {
-          ...counter,
-          remainingDays: null // لو ما فيه endDate
-        };
-      }
-    });
-
-    res.status(200).json(userData);
-
-  } catch (err) {
-    console.error("Error fetching user:", err);
-    res.status(500).json({ error: "Internal Server Error" });
-  }
-});
 
 
 router.get("/users/:id" ,async (req,res)=>{
