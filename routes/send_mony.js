@@ -75,7 +75,7 @@ router.get("/daily-action/:user_id", async (req, res) => {
     const dailyAction = await DailyAction.findOne({ where: { user_id } });
 
     if (!dailyAction) {
-      return res.json({ remainingHours: 0, message: "يمكنك تنفيذ العملية الآن" });
+      return res.json({ remainingTime: "00:00", message: "يمكنك تنفيذ العملية الآن" });
     }
 
     const now = new Date();
@@ -84,10 +84,16 @@ router.get("/daily-action/:user_id", async (req, res) => {
     const diffInHours = diffInMs / (1000 * 60 * 60);
 
     if (diffInHours >= 24) {
-      return res.json({ remainingHours: 0, message: "يمكنك تنفيذ العملية الآن" });
+      return res.json({ remainingTime: "00:00", message: "يمكنك تنفيذ العملية الآن" });
     } else {
-      const remainingHours = 24 - diffInHours;
-      return res.json({ remainingHours: remainingHours.toFixed(2), message: `يمكنك المحاولة مجددًا بعد ${remainingHours.toFixed(2)} ساعة` });
+      const remainingMs = 24 * 60 * 60 * 1000 - diffInMs;
+      const remainingMinutesTotal = Math.floor(remainingMs / (1000 * 60));
+      const hours = Math.floor(remainingMinutesTotal / 60);
+      const minutes = remainingMinutesTotal % 60;
+
+      const formattedTime = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+
+      return res.json({ remainingTime: formattedTime, message: `يمكنك المحاولة مجددًا بعد ${formattedTime} ساعة` });
     }
 
   } catch (error) {
@@ -95,6 +101,7 @@ router.get("/daily-action/:user_id", async (req, res) => {
     res.status(500).json({ error: "حدث خطأ أثناء جلب الوقت المتبقي" });
   }
 });
+
 
 router.post("/sendmony", upload.none(), async (req, res) => {
     const { senderId, receiverId, amount } = req.body;
