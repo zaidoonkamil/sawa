@@ -1,5 +1,4 @@
 require("./models/agent");
-const models = require("./models");
 const express = require("express");
 const sequelize = require("./config/db");
 const usersRouter = require("./routes/user");
@@ -18,7 +17,7 @@ app.use("/uploads", express.static("./" + "uploads"));
 
 sequelize.sync({
  //   alter: true 
-    force: false,
+    force: true,
  })
     .then(() => console.log("✅ Database & User table synced!"))
     .catch(err => console.error("❌ Error syncing database:", err));
