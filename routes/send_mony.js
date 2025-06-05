@@ -69,7 +69,7 @@ router.post("/sendmony", upload.none(), async (req, res) => {
 });
 
 router.post("/deposit-jewel", upload.none(), async (req, res) => {
-    const { userId, userEmail, amount } = req.body;
+    const { userId, amount } = req.body;
 
     try {
         const depositAmount = parseInt(amount);
@@ -80,14 +80,13 @@ router.post("/deposit-jewel", upload.none(), async (req, res) => {
 
         // جلب المستخدم
         const user = await User.findOne({
-            where: userId ? { id: userId } : { email: userEmail }
+            where:  { id: userId }
         });
 
         if (!user) {
             return res.status(404).json({ error: "User not found" });
         }
 
-        // إضافة الجواهر
         user.Jewel += depositAmount;
 
         await user.save();
