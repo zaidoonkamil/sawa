@@ -64,6 +64,37 @@ router.post("/daily-action", upload.none(), async (req, res) => {
   }
 });
 
+router.get("/daily-action/:user_id", async (req, res) => {
+  const { user_id } = req.params;
+
+  if (!user_id) {
+    return res.status(400).json({ error: "user_id مطلوب في الرابط" });
+  }
+
+  try {
+    const dailyAction = await DailyAction.findOne({ where: { user_id } });
+
+    if (!dailyAction) {
+      return res.json({ remainingHours: 0, message: "يمكنك تنفيذ العملية الآن" });
+    }
+
+    const now = new Date();
+    const lastTime = new Date(dailyAction.lastActionTime);
+    const diffInMs = now - lastTime;
+    const diffInHours = diffInMs / (1000 * 60 * 60);
+
+    if (diffInHours >= 24) {
+      return res.json({ remainingHours: 0, message: "يمكنك تنفيذ العملية الآن" });
+    } else {
+      const remainingHours = 24 - diffInHours;
+      return res.json({ remainingHours: remainingHours.toFixed(2), message: `يمكنك المحاولة مجددًا بعد ${remainingHours.toFixed(2)} ساعة` });
+    }
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "حدث خطأ أثناء جلب الوقت المتبقي" });
+  }
+});
 
 router.post("/sendmony", upload.none(), async (req, res) => {
     const { senderId, receiverId, amount } = req.body;
