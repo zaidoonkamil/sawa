@@ -177,6 +177,7 @@ router.get("/profile", authenticateToken, async (req, res) => {
       include: [
         {
           model: UserCounter,
+          attributes: ['id', 'userId', 'counterId', 'startDate', 'endDate', 'createdAt', 'updatedAt'],
           include: [Counter],
         }
       ]
