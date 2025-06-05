@@ -12,6 +12,30 @@ const upload = multer();
 const UserCounter = require("../models/usercounters");
 const Counter = require("../models/counter");
 
+
+router.put("/users/:id/gems", async (req, res) => {
+  const { id } = req.params;
+  const { gems } = req.body;
+
+  try {
+    const user = await User.findByPk(id);
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    user.Jewel = gems;
+
+    await user.save();
+
+    res.status(200).json({ message: "Jewel updated successfully", user });
+  } catch (err) {
+    console.error("Error updating gems:", err);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
+
+
 const generateToken = (user) => {
     return jwt.sign(
         { id: user.id, email: user.email, role: user.role },
@@ -185,27 +209,6 @@ router.get("/users/:id" ,async (req,res)=>{
     }
     }
 );
-
-router.put("/users/:id/gems", async (req, res) => {
-  const { id } = req.params;
-  const { gems } = req.body;
-
-  try {
-    const user = await User.findByPk(id);
-    if (!user) {
-      return res.status(404).json({ error: "User not found" });
-    }
-
-    user.gems = gems;
-
-    await user.save();
-
-    res.status(200).json({ message: "Gems updated successfully", user });
-  } catch (err) {
-    console.error("Error updating gems:", err);
-    res.status(500).json({ error: "Internal Server Error" });
-  }
-});
 
 
 router.delete("/users/:id", async (req, res) => {
