@@ -1,5 +1,7 @@
 const { DataTypes } = require("sequelize");
 const sequelize = require("../config/db");
+const User = require("./user");
+const Counter = require("./counter");
 
 const UserCounter = sequelize.define("UserCounter", {
   id: {
@@ -15,10 +17,14 @@ const UserCounter = sequelize.define("UserCounter", {
     type: DataTypes.INTEGER,
     allowNull: false,
   },
-  quantity: {
-    type: DataTypes.INTEGER,
-    defaultValue: 0,
-  }
+  startDate: {
+    type: DataTypes.DATE,
+    allowNull: false,
+  },
+  endDate: {
+    type: DataTypes.DATE,
+    allowNull: false,
+  },
 }, {
   timestamps: true,
 });

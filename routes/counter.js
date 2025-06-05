@@ -50,7 +50,16 @@ router.post("/assign-counter", upload.none(), async (req, res) => {
     const counter = await Counter.findByPk(counterId);
     if (!counter) return res.status(404).json({ error: "العداد غير موجود" });
 
-    const assign = await UserCounter.create({ userId, counterId });
+    const now = new Date();
+    const oneYearLater = new Date();
+    oneYearLater.setFullYear(oneYearLater.getFullYear() + 1);
+
+    const assign = await UserCounter.create({
+      userId,
+      counterId,
+      startDate: now,
+      endDate: oneYearLater
+    });
 
     res.status(201).json({
       message: "تم إضافة العداد للمستخدم",
