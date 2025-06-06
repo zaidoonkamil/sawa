@@ -39,4 +39,22 @@ router.get("/agents", async (req, res) => {
   }
 });
 
+router.delete("/agents/:id", async (req, res) => {
+  const agentId = req.params.id;
+
+  try {
+    const agent = await Agent.findByPk(agentId);
+    if (!agent) {
+      return res.status(404).json({ error: "الوكيل غير موجود" });
+    }
+
+    await agent.destroy();
+    res.status(200).json({ message: "تم حذف الوكيل بنجاح" });
+  } catch (err) {
+    console.error("❌ Error deleting agent:", err);
+    res.status(500).json({ error: "حدث خطأ في السيرفر" });
+  }
+});
+
+
 module.exports = router;
