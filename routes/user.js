@@ -11,6 +11,7 @@ const multer = require("multer");
 const upload = multer();
 const UserCounter = require("../models/usercounters");
 const Counter = require("../models/counter");
+const { Op } = require("sequelize");
 
 
 router.put("/users/:id/gems", upload.none() , async (req, res) => {
@@ -204,7 +205,7 @@ router.post("/login", upload.none(), async (req, res) => {
   }
 });
 
-router.get("/users", async (req, res) => {
+router.get("/allusers", async (req, res) => {
     try {
         const users = await User.findAll(); 
         res.status(200).json(users); 
@@ -214,6 +215,21 @@ router.get("/users", async (req, res) => {
     }
 });
 
+router.get("/users", async (req, res) => {
+  try {
+    const users = await User.findAll({
+      where: {
+        role: {
+          [Op.ne]: "admin"
+        }
+      }
+    });
+    res.status(200).json(users);
+  } catch (err) {
+    console.error("❌ Error fetching users:", err);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
 
 
 router.get("/users/:id" ,async (req,res)=>{
