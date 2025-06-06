@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const multer = require("multer");
 const upload = multer();
-const { User, DailyAction, UserCounter } = require("../models");
+const { User, DailyAction, UserCounter, Counter } = require("../models");
 
 
 router.post("/daily-action", upload.none(), async (req, res) => {
@@ -42,20 +42,41 @@ router.post("/daily-action", upload.none(), async (req, res) => {
       });
     }
 
-    // فحص وجود عداد للمستخدم
-    const userCounters = await UserCounter.findAll({ where: { userId: user_id } });
+    // جلب عدادات المستخدم الغير منتهية
+    const activeUserCounters = await UserCounter.findAll({
+      where: {
+        userId: user_id,
+        endDate: {
+          [require("sequelize").Op.gt]: now
+        }
+      },
+      include: [{ model: Counter }]
+    });
 
-    if (userCounters.length === 0) {
-      // إذا ما عنده عداد، نزود 100 جوهرة
-      user.Jewel += 100;
-      await user.save();
-    }
+    let totalJewels = 100; // دايمًا يبدأ بـ 100 جوهرة
+    let totalSawa = 0;
 
-    res.json({ 
-      success: true, 
-      message: "✅ تم تنفيذ العملية بنجاح", 
-      jewelsAdded: userCounters.length === 0 ? 100 : 0,
-      newJewelBalance: user.Jewel
+    activeUserCounters.forEach(userCounter => {
+      const counter = userCounter.Counter;
+      if (counter.type === "gems") {
+        totalJewels += counter.points;
+      } else if (counter.type === "points") {
+        totalSawa += counter.points;
+      }
+    });
+
+    user.Jewel += totalJewels;
+    user.sawa += totalSawa;
+
+    await user.save();
+
+    res.json({
+      success: true,
+      message: "✅ تم تنفيذ العملية بنجاح",
+      jewelsAdded: totalJewels,
+      sawaAdded: totalSawa,
+      newJewelBalance: user.Jewel,
+      newSawaBalance: user.sawa
     });
 
   } catch (error) {
@@ -63,6 +84,8 @@ router.post("/daily-action", upload.none(), async (req, res) => {
     res.status(500).json({ error: "حدث خطأ أثناء تنفيذ العملية" });
   }
 });
+
+
 
 router.get("/daily-action/:user_id", async (req, res) => {
   const { user_id } = req.params;
