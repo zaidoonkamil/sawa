@@ -85,8 +85,6 @@ router.post("/daily-action", upload.none(), async (req, res) => {
   }
 });
 
-
-
 router.get("/daily-action/:user_id", async (req, res) => {
   const { user_id } = req.params;
 
@@ -171,7 +169,11 @@ router.post("/sendmony", upload.none(), async (req, res) => {
         }
 
         // حساب العمولة
-        const fee = transferAmount * 0.10;
+        let fee = 0;
+        if (transferAmount >= 10) {
+            fee = transferAmount * 0.10;
+        }
+
         const netAmount = transferAmount - fee;
 
         // تحديث رصيد الطرفين
@@ -182,7 +184,7 @@ router.post("/sendmony", upload.none(), async (req, res) => {
         await receiver.save();
 
         res.status(200).json({
-            message: `Successfully transferred ${netAmount} sawa from ${sender.name} to ${receiver.name}. Fee: ${fee} sawa`,
+            message: `تم تحويل ${netAmount} sawa من ${sender.name} إلى ${receiver.name}. العمولة: ${fee} sawa`,
             sender: {
                 id: sender.id,
                 name: sender.name,
@@ -200,6 +202,7 @@ router.post("/sendmony", upload.none(), async (req, res) => {
         res.status(500).json({ error: "Internal Server Error" });
     }
 });
+
 
 router.post("/deposit-jewel", upload.none(), async (req, res) => {
     const { userId, amount } = req.body;
