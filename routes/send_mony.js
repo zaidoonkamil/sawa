@@ -53,7 +53,7 @@ router.post("/daily-action", upload.none(), async (req, res) => {
       include: [{ model: Counter }]
     });
 
-    let totalJewels = 100; // دايمًا يبدأ بـ 100 جوهرة
+    let totalJewels = 30; // قيمة الجواهر الأساسية
     let totalSawa = 0;
 
     activeUserCounters.forEach(userCounter => {
@@ -72,7 +72,7 @@ router.post("/daily-action", upload.none(), async (req, res) => {
 
     res.json({
       success: true,
-      message: "✅ تم تنفيذ العملية بنجاح",
+      message: "تم تنفيذ العملية بنجاح",
       jewelsAdded: totalJewels,
       sawaAdded: totalSawa,
       newJewelBalance: user.Jewel,
@@ -147,7 +147,7 @@ router.post("/sendmony", upload.none(), async (req, res) => {
 
         // تحقق من الحد الأدنى
         if (transferAmount < 50) {
-            return res.status(400).json({ error: "لا يمكن تحويل أقل من 50 sawa" });
+            return res.status(400).json({ error: "لا يمكن تحويل أقل من 50 سوا" });
         }
 
         // جلب المرسل
