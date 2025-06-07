@@ -142,7 +142,12 @@ router.post("/sendmony", upload.none(), async (req, res) => {
         const transferAmount = parseFloat(amount);
 
         if (isNaN(transferAmount) || transferAmount <= 0) {
-            return res.status(400).json({ error: "Invalid transfer amount" });
+            return res.status(400).json({ error: "المبلغ غير صالح" });
+        }
+
+        // تحقق من الحد الأدنى
+        if (transferAmount < 50) {
+            return res.status(400).json({ error: "لا يمكن تحويل أقل من 50 sawa" });
         }
 
         // جلب المرسل
@@ -151,12 +156,12 @@ router.post("/sendmony", upload.none(), async (req, res) => {
         });
 
         if (!sender) {
-            return res.status(404).json({ error: "Sender not found" });
+            return res.status(404).json({ error: "المستخدم المرسل غير موجود" });
         }
 
         // تحقق من رصيد المرسل
         if (sender.sawa < transferAmount) {
-            return res.status(400).json({ error: "Insufficient balance" });
+            return res.status(400).json({ error: "رصيد المرسل غير كافي" });
         }
 
         // جلب المستقبل
@@ -165,15 +170,11 @@ router.post("/sendmony", upload.none(), async (req, res) => {
         });
 
         if (!receiver) {
-            return res.status(404).json({ error: "Receiver not found" });
+            return res.status(404).json({ error: "المستلم غير موجود" });
         }
 
         // حساب العمولة
-        let fee = 0;
-        if (transferAmount >= 10) {
-            fee = transferAmount * 0.10;
-        }
-
+        const fee = transferAmount * 0.10;
         const netAmount = transferAmount - fee;
 
         // تحديث رصيد الطرفين
@@ -184,7 +185,7 @@ router.post("/sendmony", upload.none(), async (req, res) => {
         await receiver.save();
 
         res.status(200).json({
-            message: `تم تحويل ${netAmount} sawa من ${sender.name} إلى ${receiver.name}. العمولة: ${fee} sawa`,
+            message: `✅ تم تحويل ${netAmount} sawa من ${sender.name} إلى ${receiver.name}. العمولة: ${fee} sawa`,
             sender: {
                 id: sender.id,
                 name: sender.name,
@@ -198,8 +199,8 @@ router.post("/sendmony", upload.none(), async (req, res) => {
         });
 
     } catch (err) {
-        console.error("❌ Error during transfer:", err);
-        res.status(500).json({ error: "Internal Server Error" });
+        console.error("❌ خطأ أثناء التحويل:", err);
+        res.status(500).json({ error: "خطأ في الخادم" });
     }
 });
 
