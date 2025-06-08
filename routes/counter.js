@@ -50,6 +50,13 @@ router.post("/assign-counter", upload.none(), async (req, res) => {
     const counter = await Counter.findByPk(counterId);
     if (!counter) return res.status(404).json({ error: "العداد غير موجود" });
 
+    if (user.sawa < counter.price) {
+      return res.status(400).json({ error: "رصيد sawa غير كافي لشراء هذا العداد" });
+    }
+    
+    user.sawa -= counter.price;
+    await user.save();
+
     const now = new Date();
     const oneYearLater = new Date();
     oneYearLater.setFullYear(oneYearLater.getFullYear() + 1);
@@ -63,8 +70,10 @@ router.post("/assign-counter", upload.none(), async (req, res) => {
 
     res.status(201).json({
       message: "تم إضافة العداد للمستخدم",
-      assign
+      assign,
+      remainingSawa: user.sawa
     });
+
   } catch (err) {
     console.error("❌ Error assigning counter:", err);
     res.status(500).json({ error: "Internal Server Error" });
