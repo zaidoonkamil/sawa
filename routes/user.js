@@ -71,6 +71,7 @@ router.get("/profile", authenticateToken, async (req, res) => {
 
     const userData = user.toJSON();
 
+    // حساب عدد الأيام المتبقية للعدادات
     userData.UserCounters = userData.UserCounters.map(counter => {
       if (counter.endDate) {
         const now = new Date();
@@ -85,10 +86,13 @@ router.get("/profile", authenticateToken, async (req, res) => {
       } else {
         return {
           ...counter,
-          remainingDays: null // لو ما فيه endDate
+          remainingDays: null
         };
       }
     });
+
+    // حساب الدولار بناءً على الساوا
+    userData.dolar = (userData.sawa * 0.010).toFixed(2); 
 
     res.status(200).json(userData);
 
@@ -97,6 +101,7 @@ router.get("/profile", authenticateToken, async (req, res) => {
     res.status(500).json({ error: "Internal Server Error" });
   }
 });
+
 
 
 router.get("/verify-token", (req, res) => {
