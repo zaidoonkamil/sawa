@@ -102,8 +102,6 @@ router.get("/profile", authenticateToken, async (req, res) => {
   }
 });
 
-
-
 router.get("/verify-token", (req, res) => {
   const token = req.headers.authorization;
 
@@ -236,23 +234,27 @@ router.get("/users", async (req, res) => {
   }
 });
 
+router.get("/users/:id", async (req, res) => {
+  const { id } = req.params;
 
-router.get("/users/:id" ,async (req,res)=>{
-    const {id} = req.params;
-
-    try{
-        const user = await User.findByPk(id);
-        if(!user){
-            return res.status(404).json({error:"User not found"});
-        }
-        res.status(200).json(user);
-    }catch(err){
-        console.error(" Error fetching user:",err);
-        res.status(500).json({error:"Internal Server Error"});
+  try {
+    const user = await User.findByPk(id);
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
     }
-    }
-);
 
+    const userData = user.toJSON();
+
+    // حساب الدولار بناءً على الساوا
+    userData.dolar = (userData.sawa * 0.010).toFixed(2);
+
+    res.status(200).json(userData);
+    
+  } catch (err) {
+    console.error("Error fetching user:", err);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
 
 router.delete("/users/:id", async (req, res) => {
     const { id } = req.params;
