@@ -227,7 +227,6 @@ router.post("/sendmony", upload.none(), async (req, res) => {
   }
 });
 
-
 router.post("/deposit-jewel", upload.none(), async (req, res) => {
     const { userId, amount } = req.body;
 
@@ -272,8 +271,12 @@ router.post("/deposit-sawa", upload.none(), async (req, res) => {
     try {
         const depositAmount = parseFloat(amount);
 
-        if (isNaN(depositAmount) || depositAmount <= 0) {
-            return res.status(400).json({ error: "Invalid deposit amount" });
+        if (isNaN(depositAmount)) {
+            return res.status(400).json({ error: "Deposit amount must be a valid number" });
+        }
+
+        if (depositAmount === 0) {
+            return res.status(400).json({ error: "Deposit amount cannot be zero" });
         }
 
         // جلب المستخدم
@@ -285,13 +288,13 @@ router.post("/deposit-sawa", upload.none(), async (req, res) => {
             return res.status(404).json({ error: "User not found" });
         }
 
-        // إضافة النقاط
+        // تحديث الساوا (زيادة أو نقصان)
         user.sawa += depositAmount;
 
         await user.save();
 
         res.status(200).json({
-            message: `Successfully added ${depositAmount} sawa to ${user.name}`,
+            message: `Successfully updated sawa balance by ${depositAmount} for ${user.name}`,
             user: {
                 id: user.id,
                 name: user.name,
