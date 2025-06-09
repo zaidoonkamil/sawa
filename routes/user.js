@@ -94,6 +94,24 @@ router.get("/profile", authenticateToken, async (req, res) => {
     // حساب الدولار بناءً على الساوا
     userData.dolar = (userData.sawa * 0.010).toFixed(2); 
 
+    // حساب مجموع points و gems من UserCounters
+    let totalPoints = 0;
+    let totalGems = 0;
+
+    userData.UserCounters.forEach(uc => {
+      if (uc.Counter) {
+        if (uc.Counter.type === "points") {
+          totalPoints += uc.Counter.points;
+        } else if (uc.Counter.type === "gems") {
+          totalGems += uc.Counter.points;
+        }
+      }
+    });
+
+    // أضف المجموع إلى الرد
+    userData.totalPoints = totalPoints;
+    userData.totalGems = totalGems;
+
     res.status(200).json(userData);
 
   } catch (err) {
