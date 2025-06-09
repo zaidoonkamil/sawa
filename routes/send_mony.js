@@ -3,6 +3,8 @@ const router = express.Router();
 const multer = require("multer");
 const upload = multer();
 const { User, DailyAction, UserCounter, Counter } = require("../models");
+const { Op } = require("sequelize");
+const TransferHistory = require("../models/transferHistory");
 
 
 router.post("/daily-action", upload.none(), async (req, res) => {
@@ -136,72 +138,93 @@ router.get("/daily-action/:user_id", async (req, res) => {
 });
 
 router.post("/sendmony", upload.none(), async (req, res) => {
-    const { senderId, receiverId, amount } = req.body;
+  const { senderId, receiverId, amount } = req.body;
 
-    try {
-        const transferAmount = parseFloat(amount);
+  try {
+    const transferAmount = parseFloat(amount);
+    const dailyLimit = 500;
 
-        if (isNaN(transferAmount) || transferAmount <= 0) {
-            return res.status(400).json({ error: "المبلغ غير صالح" });
-        }
-
-        // تحقق من الحد الأدنى
-        if (transferAmount < 50) {
-            return res.status(400).json({ error: "لا يمكن تحويل أقل من 50 سوا" });
-        }
-
-        // جلب المرسل
-        const sender = await User.findOne({
-            where: { id: senderId }
-        });
-
-        if (!sender) {
-            return res.status(404).json({ error: "المستخدم المرسل غير موجود" });
-        }
-
-        // تحقق من رصيد المرسل
-        if (sender.sawa < transferAmount) {
-            return res.status(400).json({ error: "رصيد المرسل غير كافي" });
-        }
-
-        // جلب المستقبل
-        const receiver = await User.findOne({
-            where: { id: receiverId }
-        });
-
-        if (!receiver) {
-            return res.status(404).json({ error: "المستلم غير موجود" });
-        }
-
-        // حساب العمولة
-        const fee = transferAmount * 0.10;
-        const netAmount = transferAmount - fee;
-
-        // تحديث رصيد الطرفين
-        sender.sawa -= transferAmount;
-        receiver.sawa += netAmount;
-
-        await sender.save();
-        await receiver.save();
-
-        res.status(200).json({
-            message: `✅ تم تحويل ${netAmount} sawa من ${sender.name} إلى ${receiver.name}. العمولة: ${fee} sawa`,
-            sender: {
-                id: sender.id,
-                name: sender.name,
-                balance: sender.sawa
-            },
-            receiver: {
-                id: receiver.id,
-                name: receiver.name,
-                balance: receiver.sawa
-            }
-        });
-
-    } catch (err) {
-        console.error("❌ خطأ أثناء التحويل:", err);
-        res.status(500).json({ error: "خطأ في الخادم" });
+    if (isNaN(transferAmount) || transferAmount <= 0) {
+      return res.status(400).json({ error: "المبلغ غير صالح" });
     }
+
+    if (transferAmount < 50) {
+      return res.status(400).json({ error: "لا يمكن تحويل أقل من 50 سوا" });
+    }
+
+    const sender = await User.findByPk(senderId);
+    if (!sender) {
+      return res.status(404).json({ error: "المستخدم المرسل غير موجود" });
+    }
+
+    if (sender.sawa < transferAmount) {
+      return res.status(400).json({ error: "رصيد المرسل غير كافي" });
+    }
+
+    const receiver = await User.findByPk(receiverId);
+    if (!receiver) {
+      return res.status(404).json({ error: "المستلم غير موجود" });
+    }
+
+    // تحقق من إجمالي تحويلات اليوم
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+
+    const todayEnd = new Date();
+    todayEnd.setHours(23, 59, 59, 999);
+
+    const totalSentToday = await TransferHistory.sum("amount", {
+      where: {
+        senderId,
+        createdAt: {
+          [Op.between]: [todayStart, todayEnd],
+        },
+      },
+    });
+
+    if ((totalSentToday || 0) + transferAmount > dailyLimit) {
+      return res.status(400).json({
+        error: `لا يمكنك تحويل أكثر من ${dailyLimit} سوا في اليوم`,
+      });
+    }
+
+    // حساب العمولة
+    const fee = transferAmount * 0.1;
+    const netAmount = transferAmount - fee;
+
+    // تحديث رصيد الطرفين
+    sender.sawa -= transferAmount;
+    receiver.sawa += netAmount;
+
+    await sender.save();
+    await receiver.save();
+
+    // تسجيل العملية في سجل التحويلات
+    await TransferHistory.create({
+      senderId,
+      receiverId,
+      amount: transferAmount,
+      fee,
+    });
+
+    res.status(200).json({
+      message: `✅ تم تحويل ${netAmount} sawa من ${sender.name} إلى ${receiver.name}. العمولة: ${fee} sawa`,
+      sender: {
+        id: sender.id,
+        name: sender.name,
+        balance: sender.sawa,
+      },
+      receiver: {
+        id: receiver.id,
+        name: receiver.name,
+        balance: receiver.sawa,
+      },
+    });
+
+  } catch (err) {
+    console.error("❌ خطأ أثناء التحويل:", err);
+    res.status(500).json({ error: "خطأ في الخادم" });
+  }
 });
 
 
