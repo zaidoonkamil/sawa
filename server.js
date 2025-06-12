@@ -7,12 +7,36 @@ const sendmonyRouter = require("./routes/send_mony.js");
 const counterRouter = require("./routes/counter.js");
 const notifications = require("./routes/notifications.js");
 const agentsRouter = require("./routes/agents.js");
-
 require("./cron");
 
 
+/////
+const https = require("https");
+const socketIo = require("socket.io");
+const timerRoute = require("./routes/timerRoute");
 const app = express();
-app.use(express.json());
+const httpsServer = https.createServer(credentials, app);
+const io = socketIo(httpsServer, {
+  cors: {
+    origin: "*"
+  }
+});
+app.use("/timer", timerRoute(io));
+io.on("connection", (socket) => {
+  console.log("عميل جديد متصل عبر HTTPS Socket");
+
+  socket.on("disconnect", () => {
+    console.log("تم قطع الاتصال");
+  });
+});
+
+
+
+
+
+
+//const app = express();
+//app.use(express.json());
 app.use("/uploads", express.static("./" + "uploads"));
 
 sequelize.sync({
