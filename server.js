@@ -30,11 +30,6 @@ io.on("connection", (socket) => {
   });
 });
 
-
-
-
-
-
 //const app = express();
 //app.use(express.json());
 app.use("/uploads", express.static("./" + "uploads"));
@@ -55,6 +50,6 @@ app.use("/", notifications);
 app.use("/", agentsRouter);
 
 
-app.listen( 3000 , () => {
-    console.log(`🚀 Server running on http://localhost:3000`);
+httpsServer.listen(443, () => {
+  console.log("🚀 Server running on https://yourdomain.com (port 443)");
 });
