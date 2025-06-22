@@ -91,8 +91,7 @@ router.get("/profile", authenticateToken, async (req, res) => {
       }
     });
 
-    // حساب الدولار بناءً على الساوا
-    userData.dolar = (userData.sawa * 0.010).toFixed(2); 
+    userData.dolar = userData.sawa * 10;
 
     // حساب مجموع points و gems من UserCounters
     let totalPoints = 0;
