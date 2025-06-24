@@ -54,8 +54,9 @@ router.post("/assign-counter", upload.none(), async (req, res) => {
       return res.status(400).json({ error: "رصيد sawa غير كافي لشراء هذا العداد" });
     }
     
-    user.sawa -= counter.price;
-    await user.save();
+if (typeof user.sawa === "number" && !isNaN(user.sawa)) {
+  user.sawa -= counter.price;
+}    await user.save();
 
     const now = new Date();
     const oneYearLater = new Date();

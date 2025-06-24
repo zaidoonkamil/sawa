@@ -67,10 +67,16 @@ router.post("/daily-action", upload.none(), async (req, res) => {
       }
     });
 
-    user.Jewel += totalJewels;
-    user.sawa += totalSawa;
+    if (typeof user.Jewel === "number" && !isNaN(user.Jewel)) {
+       user.Jewel += totalJewels;
+    }
+
+    if (typeof user.sawa === "number" && !isNaN(user.sawa)) {
+      user.sawa += totalSawa;
+    }
 
     await user.save();
+
 
     res.json({
       success: true,
@@ -192,14 +198,19 @@ router.post("/sendmony", upload.none(), async (req, res) => {
     const fee = transferAmount * 0.1;
     const netAmount = transferAmount - fee;
 
-    // تحديث رصيد الطرفين
-    sender.sawa -= transferAmount;
-    receiver.sawa += netAmount;
+if (typeof sender.sawa === "number" && !isNaN(sender.sawa)) {
+  sender.sawa -= transferAmount;
+}
 
-    await sender.save();
-    await receiver.save();
+if (typeof receiver.sawa === "number" && !isNaN(receiver.sawa)) {
+  receiver.sawa += netAmount;
+}
 
-    // تسجيل العملية في سجل التحويلات
+await sender.save();
+await receiver.save();
+
+
+// تسجيل العملية في سجل التحويلات
     await TransferHistory.create({
       senderId,
       receiverId,
@@ -288,8 +299,10 @@ router.post("/deposit-sawa", upload.none(), async (req, res) => {
             return res.status(404).json({ error: "User not found" });
         }
 
-        // تحديث الساوا (زيادة أو نقصان)
-        user.sawa += depositAmount;
+
+        if (typeof user.sawa === "number" && !isNaN(user.sawa)) {
+          user.sawa += depositAmount;
+        }
 
         await user.save();
 
@@ -362,8 +375,9 @@ router.post("/buy-counter", upload.none(), async (req, res) => {
         }
 
         // خصم السعر من sawa
-        user.sawa -= counter.price;
-        await user.save();
+if (typeof user.sawa === "number" && !isNaN(user.sawa)) {
+  user.sawa -= counter.price;
+}        await user.save();
 
         // حفظ العداد للمستخدم
         await UserCounter.create({

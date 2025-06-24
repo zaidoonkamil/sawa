@@ -1,5 +1,6 @@
 const cron = require('node-cron');
 const { UserCounter, User, Counter } = require('./models');
+const { Op } = require('sequelize');
 
 cron.schedule("0 0 * * *", async () => {
   console.log("⏰ Running daily rewards distribution...");
@@ -10,7 +11,7 @@ cron.schedule("0 0 * * *", async () => {
     const userCounters = await UserCounter.findAll({
       where: {
         endDate: {
-          [require("sequelize").Op.gt]: now
+          [Op.gt]: now
         }
       },
       include: [
@@ -24,14 +25,24 @@ cron.schedule("0 0 * * *", async () => {
       const counter = uc.Counter;
 
       if (user && counter) {
-        user.sawa += counter.dailyReward;
-        await user.save();
-        console.log(`✅ Added ${counter.dailyReward} sawa to user ${user.id}`);
+        // تحقق إن dailyReward موجود ورقم موجب
+        const reward = parseFloat(counter.dailyReward);
+        if (!isNaN(reward) && reward > 0) {
+          // تحقق من نوع user.sawa
+          if (typeof user.sawa === "number" && !isNaN(user.sawa)) {
+            user.sawa += reward;
+            await user.save();
+            console.log(`✅ Added ${reward} sawa to user ${user.id}`);
+          } else {
+            console.warn(`⚠️ Invalid sawa value for user ${user.id}, skipping update`);
+          }
+        } else {
+          console.log(`⚠️ Skipped user ${user.id} - no valid reward`);
+        }
       }
     }
 
-    console.log("🚀 Cron job starting at", new Date().toLocaleString());
-    console.log("✅ Rewards distributed successfully");
+    console.log("✅ Rewards distributed successfully at", new Date().toLocaleString());
   } catch (err) {
     console.error("❌ Error distributing rewards:", err);
   }
