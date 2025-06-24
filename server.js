@@ -18,9 +18,8 @@ app.use("/uploads", express.static("./" + "uploads"));
 sequelize.sync({
   //  alter: true 
     force: false,
- })
-    .then(() => console.log("✅ Database & User table synced!"))
-    .catch(err => console.error("❌ Error syncing database:", err));
+ }).then(() => console.log("✅ Database & User table synced!"))
+  .catch(err => console.error("❌ Error syncing database:", err));
 
 
 app.use("/", usersRouter);
@@ -29,11 +28,6 @@ app.use("/timeofday", timeOfDayRouter);
 app.use("/", counterRouter);
 app.use("/", notifications);
 app.use("/", agentsRouter);
-
-app.use((req, res, next) => {
-  console.log(`📥 Request: ${req.method} ${req.url}`);
-  next();
-});
 
 app.listen( 3000 , () => {
     console.log(`🚀 Server running on http://localhost:3000`);

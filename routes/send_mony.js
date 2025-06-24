@@ -55,7 +55,7 @@ router.post("/daily-action", upload.none(), async (req, res) => {
       include: [{ model: Counter }]
     });
 
-    let totalJewels = 30; // قيمة الجواهر الأساسية
+    let totalJewels = 30; 
     let totalSawa = 0;
 
     activeUserCounters.forEach(userCounter => {
