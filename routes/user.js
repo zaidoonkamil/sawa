@@ -191,7 +191,7 @@ router.post("/login", upload.none(), async (req, res) => {
 
       if (!alreadyReferred) {
         // أضف 20 لصاحب الكود
-        friend.sawa += 20;
+        friend.sawa += 2;
         await friend.save();
 
         // سجل إحالة هذا المستخدم
