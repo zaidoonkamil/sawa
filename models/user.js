@@ -43,10 +43,12 @@ const User = sequelize.define("User", {
     sawa: {
         type: DataTypes.INTEGER,
         allowNull: false,
+        defaultValue: 0,
     },
     dolar: {
         type: DataTypes.DOUBLE,
         allowNull: false,
+        defaultValue: 0,
     },
 }, {
     timestamps: true,
