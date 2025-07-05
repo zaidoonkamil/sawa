@@ -41,7 +41,8 @@ router.get("/counters", async (req, res) => {
     }
 });
 
-router.put('/counters/activate-all', async (req, res) => {
+
+/*router.put('/counters/activate-all', async (req, res) => {
   try {
     const [affectedCount] = await Counter.update(
       { isActive: true },
@@ -62,7 +63,7 @@ router.put('/counters/activate-all', async (req, res) => {
     console.error('Error activating counters:', error);
     res.status(500).json({ error: 'حدث خطأ أثناء تحديث العداد' });
   }
-});
+});*/
 
 router.post("/assign-counter", upload.none(), async (req, res) => {
   const { userId, counterId } = req.body;
