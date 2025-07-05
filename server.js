@@ -16,8 +16,8 @@ app.use(express.json());
 app.use("/uploads", express.static("./" + "uploads"));
 
 sequelize.sync({
-    //alter: true 
-    force: true,
+    //alter: true
+    force: fasle,
  }).then(() => console.log("✅ Database & User table synced!"))
   .catch(err => console.error("❌ Error syncing database:", err));
 
