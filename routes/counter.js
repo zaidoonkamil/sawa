@@ -28,12 +28,39 @@ router.post("/counters", upload.none(), async (req, res) => {
 
 router.get("/counters", async (req, res) => {
     try {
-        const counters = await Counter.findAll();
+        const counters = await Counter.findAll({
+            where: {
+                isActive: true
+            }
+        });
         res.status(200).json(counters);
     } catch (err) {
         console.error("❌ Error fetching counters:", err);
         res.status(500).json({ error: "Internal Server Error" });
     }
+});
+
+router.put('/counters/activate-all', async (req, res) => {
+  try {
+    const [affectedCount] = await Counter.update(
+      { isActive: true },
+      {
+        where: {
+          [Op.or]: [
+            { isActive: false },
+            { isActive: null }
+          ]
+        }
+      }
+    );
+
+    res.status(200).json({
+      message: `تم تفعيل ${affectedCount} عداد/عدادات بنجاح.`,
+    });
+  } catch (error) {
+    console.error('Error activating counters:', error);
+    res.status(500).json({ error: 'حدث خطأ أثناء تحديث العداد' });
+  }
 });
 
 router.post("/assign-counter", upload.none(), async (req, res) => {
@@ -78,6 +105,26 @@ if (typeof user.sawa === "number" && !isNaN(user.sawa)) {
   } catch (err) {
     console.error("❌ Error assigning counter:", err);
     res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
+router.delete("/counters/:id", async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const counter = await Counter.findByPk(id);
+    if (!counter) {
+      return res.status(404).json({ error: "العداد غير موجود" });
+    }
+
+    counter.isActive = false;
+    await counter.save();
+
+    res.status(200).json({ message: "تم تعطيل العداد بنجاح" });
+
+  } catch (err) {
+    console.error("❌ Error disabling counter:", err);
+    res.status(500).json({ error: "حدث خطأ أثناء تعطيل العداد" });
   }
 });
 

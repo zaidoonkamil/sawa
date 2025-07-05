@@ -54,70 +54,6 @@ const authenticateToken = (req, res, next) => {
     });
 };
 
-router.get("/profile", authenticateToken, async (req, res) => {
-  try {
-    const user = await User.findByPk(req.user.id, {
-      include: [
-        {
-          model: UserCounter,
-          include: [Counter],
-        }
-      ]
-    });
-
-    if (!user) {
-      return res.status(404).json({ error: "User not found" });
-    }
-
-    const userData = user.toJSON();
-
-    // حساب عدد الأيام المتبقية للعدادات
-    userData.UserCounters = userData.UserCounters.map(counter => {
-      if (counter.endDate) {
-        const now = new Date();
-        const endDate = new Date(counter.endDate);
-        const diffInMs = endDate - now;
-        const diffInDays = Math.ceil(diffInMs / (1000 * 60 * 60 * 24));
-
-        return {
-          ...counter,
-          remainingDays: diffInDays > 0 ? diffInDays : 0
-        };
-      } else {
-        return {
-          ...counter,
-          remainingDays: null
-        };
-      }
-    });
-
-    userData.dolar = userData.sawa * 10;
-
-    // حساب مجموع points و gems من UserCounters
-    let totalPoints = 0;
-    let totalGems = 0;
-
-    userData.UserCounters.forEach(uc => {
-      if (uc.Counter) {
-        if (uc.Counter.type === "points") {
-          totalPoints += uc.Counter.points;
-        } else if (uc.Counter.type === "gems") {
-          totalGems += uc.Counter.points;
-        }
-      }
-    });
-
-    // أضف المجموع إلى الرد
-    userData.totalPoints = totalPoints;
-    userData.totalGems = totalGems;
-
-    res.status(200).json(userData);
-
-  } catch (err) {
-    console.error("Error fetching user:", err);
-    res.status(500).json({ error: "Internal Server Error" });
-  }
-});
 
 router.get("/verify-token", (req, res) => {
   const token = req.headers.authorization;
@@ -251,6 +187,73 @@ router.get("/users", async (req, res) => {
   }
 });
 
+router.get("/profile", authenticateToken, async (req, res) => {
+  try {
+    const user = await User.findByPk(req.user.id, {
+      include: [
+        {
+          model: UserCounter,
+          include: [{
+            model:Counter,
+            paranoid : false 
+        }],
+          
+        }
+      ]
+    });
+
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    const userData = user.toJSON();
+
+    // حساب عدد الأيام المتبقية للعدادات
+    userData.UserCounters = userData.UserCounters.map(counter => {
+      if (counter.endDate) {
+        const now = new Date();
+        const endDate = new Date(counter.endDate);
+        const diffInMs = endDate - now;
+        const diffInDays = Math.ceil(diffInMs / (1000 * 60 * 60 * 24));
+
+        return {
+          ...counter,
+          remainingDays: diffInDays > 0 ? diffInDays : 0
+        };
+      } else {
+        return {
+          ...counter,
+          remainingDays: null
+        };
+      }
+    });
+
+    userData.dolar = userData.sawa * 10;
+
+    let totalPoints = 0;
+    let totalGems = 0;
+
+    userData.UserCounters.forEach(uc => {
+      if (uc.Counter) {
+        if (uc.Counter.type === "points") {
+          totalPoints += uc.Counter.points;
+        } else if (uc.Counter.type === "gems") {
+          totalGems += uc.Counter.points;
+        }
+      }
+    });
+
+    userData.totalPoints = totalPoints;
+    userData.totalGems = totalGems;
+
+    res.status(200).json(userData);
+
+  } catch (err) {
+    console.error("Error fetching user:", err);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
 router.get("/users/:id", async (req, res) => {
   const { id } = req.params;
 
@@ -259,7 +262,10 @@ router.get("/users/:id", async (req, res) => {
       include: [
         {
           model: UserCounter,
-          include: [Counter],
+           include: [{
+            model: Counter,
+            paranoid: false, 
+          }],
         }
       ]
     });
