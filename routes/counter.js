@@ -5,6 +5,7 @@ const upload = multer();
 const Counter = require('../models/counter');
 const User = require("../models/user");
 const UserCounter = require("../models/usercounters");
+const { Op } = require("sequelize");
 
 router.post("/counters", upload.none(), async (req, res) => {
     const { type, points, price } = req.body;
