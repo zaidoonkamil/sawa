@@ -155,14 +155,43 @@ router.post("/counters/sell", upload.none(), async (req, res) => {
 });
 
 router.get("/counters/for-sale", async (req, res) => {
-  const sales = await CounterSale.findAll({
-    where: { isSold: false },
-    include: [
-      { model: User, attributes: ['id', 'name'] },
-      { model: UserCounter, include: [Counter] }
-    ]
-  });
-  res.status(200).json(sales);
+  try {
+    const sales = await CounterSale.findAll({
+      where: { isSold: false },
+      include: [
+        { model: User, attributes: ['id', 'name'] },
+        { 
+          model: UserCounter, 
+          include: [Counter] 
+        }
+      ]
+    });
+
+    // نحسب عدد الأيام المتبقية لكل عداد
+    const salesWithDays = sales.map(sale => {
+      const userCounter = sale.UserCounter;
+
+      let remainingDays = null;
+      if (userCounter && userCounter.endDate) {
+        const now = new Date();
+        const endDate = new Date(userCounter.endDate);
+        const diffInMs = endDate - now;
+        remainingDays = Math.max(0, Math.ceil(diffInMs / (1000 * 60 * 60 * 24)));
+      }
+
+      // نرجع البيانات مع الأيام
+      return {
+        ...sale.toJSON(),
+        remainingDays
+      };
+    });
+
+    res.status(200).json(salesWithDays);
+
+  } catch (err) {
+    console.error("❌ Error fetching counters for sale:", err);
+    res.status(500).json({ error: "حدث خطأ أثناء جلب العروض" });
+  }
 });
 
 router.post("/fix-usercounters", async (req, res) => {
