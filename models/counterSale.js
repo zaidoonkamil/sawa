@@ -1,47 +1,38 @@
 const { DataTypes } = require("sequelize");
 const sequelize = require("../config/db");
 
-const UserCounter = sequelize.define("UserCounter", {
+const CounterSale = sequelize.define("CounterSale", {
   id: {
     type: DataTypes.INTEGER,
     autoIncrement: true,
     primaryKey: true,
   },
-  userId: {
+  userId: {    
     type: DataTypes.INTEGER,
     allowNull: false,
   },
-  counterId: {
+  userCounterId: { 
     type: DataTypes.INTEGER,
     allowNull: false,
   },
-  points: {
+  originalPoints: {
     type: DataTypes.INTEGER,
     allowNull: false,
   },
-  type: {
-    type: DataTypes.ENUM("points", "gems"),
+  pointsAfterCut: {
+    type: DataTypes.INTEGER,
     allowNull: false,
-    defaultValue: "points"
   },
   price: {
-    type: DataTypes.DOUBLE,
+    type: DataTypes.INTEGER,
     allowNull: false,
   },
-  startDate: {
-    type: DataTypes.DATE,
-    allowNull: false,
-  },
-  endDate: {
-    type: DataTypes.DATE,
-    allowNull: false,
-  },
-  isForSale: {
+  isSold: {
     type: DataTypes.BOOLEAN,
     defaultValue: false,
-  }
+  },
 }, {
   timestamps: true,
 });
 
-module.exports = UserCounter;
+module.exports = CounterSale;

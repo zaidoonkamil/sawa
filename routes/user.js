@@ -12,6 +12,7 @@ const upload = multer();
 const UserCounter = require("../models/usercounters");
 const Counter = require("../models/counter");
 const { Op } = require("sequelize");
+const CounterSale = require("../models/counterSale");
 
 
 router.put("/users/:id/gems", upload.none() , async (req, res) => {
@@ -193,13 +194,19 @@ router.get("/profile", authenticateToken, async (req, res) => {
       include: [
         {
           model: UserCounter,
-          include: [{
-            model:Counter,
-            paranoid : false 
-        }],
-          
-        }
-      ]
+          include: [
+            {
+              model: Counter,
+              paranoid: false,
+            },
+            {
+              model: CounterSale,
+              where: { isSold: false },
+              required: false, // حتى لو ما عنده عرض بيع ما يطرد المستخدم
+            },
+          ],
+        },
+      ],
     });
 
     if (!user) {
@@ -208,8 +215,8 @@ router.get("/profile", authenticateToken, async (req, res) => {
 
     const userData = user.toJSON();
 
-    // حساب عدد الأيام المتبقية للعدادات
-    userData.UserCounters = userData.UserCounters.map(counter => {
+    // حساب الأيام المتبقية لكل عداد
+    userData.UserCounters = userData.UserCounters.map((counter) => {
       if (counter.endDate) {
         const now = new Date();
         const endDate = new Date(counter.endDate);
@@ -218,22 +225,19 @@ router.get("/profile", authenticateToken, async (req, res) => {
 
         return {
           ...counter,
-          remainingDays: diffInDays > 0 ? diffInDays : 0
-        };
-      } else {
-        return {
-          ...counter,
-          remainingDays: null
+          remainingDays: diffInDays > 0 ? diffInDays : 0,
         };
       }
+      return { ...counter, remainingDays: null };
     });
 
+    // تحويل الساوا للدولار
     userData.dolar = userData.sawa * 10;
 
     let totalPoints = 0;
     let totalGems = 0;
 
-    userData.UserCounters.forEach(uc => {
+    userData.UserCounters.forEach((uc) => {
       if (uc.Counter) {
         if (uc.Counter.type === "points") {
           totalPoints += uc.Counter.points;
@@ -247,12 +251,13 @@ router.get("/profile", authenticateToken, async (req, res) => {
     userData.totalGems = totalGems;
 
     res.status(200).json(userData);
-
   } catch (err) {
-    console.error("Error fetching user:", err);
+    console.error("❌ Error fetching user profile:", err);
     res.status(500).json({ error: "Internal Server Error" });
   }
 });
+
+
 
 router.get("/users/:id", async (req, res) => {
   const { id } = req.params;

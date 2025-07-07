@@ -5,6 +5,7 @@ const upload = multer();
 const Counter = require('../models/counter');
 const User = require("../models/user");
 const UserCounter = require("../models/usercounters");
+const CounterSale = require("../models/counterSale");
 const { Op } = require("sequelize");
 
 router.post("/counters", upload.none(), async (req, res) => {
@@ -41,30 +42,6 @@ router.get("/counters", async (req, res) => {
     }
 });
 
-
-/*router.put('/counters/activate-all', async (req, res) => {
-  try {
-    const [affectedCount] = await Counter.update(
-      { isActive: true },
-      {
-        where: {
-          [Op.or]: [
-            { isActive: false },
-            { isActive: null }
-          ]
-        }
-      }
-    );
-
-    res.status(200).json({
-      message: `تم تفعيل ${affectedCount} عداد/عدادات بنجاح.`,
-    });
-  } catch (error) {
-    console.error('Error activating counters:', error);
-    res.status(500).json({ error: 'حدث خطأ أثناء تحديث العداد' });
-  }
-});*/
-
 router.post("/assign-counter", upload.none(), async (req, res) => {
   const { userId, counterId } = req.body;
 
@@ -94,6 +71,9 @@ if (typeof user.sawa === "number" && !isNaN(user.sawa)) {
     const assign = await UserCounter.create({
       userId,
       counterId,
+      points: counter.points,
+      type: counter.type,
+      price: counter.price,
       startDate: now,
       endDate: oneYearLater
     });
@@ -127,6 +107,178 @@ router.delete("/counters/:id", async (req, res) => {
   } catch (err) {
     console.error("❌ Error disabling counter:", err);
     res.status(500).json({ error: "حدث خطأ أثناء تعطيل العداد" });
+  }
+});
+
+router.post("/counters/sell", upload.none(), async (req, res) => {
+  const { userId, userCounterId, price } = req.body;
+
+  try {
+    const userCounter = await UserCounter.findOne({
+      where: { id: userCounterId, userId },
+      include: Counter
+    });
+
+    if (!userCounter) return res.status(404).json({ error: "العداد غير موجود" });
+
+    if (userCounter.isForSale) {
+      return res.status(400).json({ error: "العداد معروض للبيع بالفعل" });
+    }
+
+  if (userCounter.points < 10) {
+      return res.status(400).json({ error: "لا يمكن عرض العداد للبيع إذا كانت النقاط أقل من 10" });
+    }
+    
+    const originalPoints = userCounter.points; 
+    const pointsAfterCut = Math.floor(originalPoints * 0.9);
+
+    const sale = await CounterSale.create({
+      userId,
+      userCounterId,
+      originalPoints,
+      pointsAfterCut,
+      price
+    });
+
+    userCounter.isForSale = true;
+    await userCounter.save();
+
+    res.status(201).json({
+      message: "تم عرض العداد للبيع بنجاح",
+      sale
+    });
+
+  } catch (err) {
+    console.error("❌ Error offering counter for sale:", err);
+    res.status(500).json({ error: "خطأ أثناء عرض العداد للبيع" });
+  }
+});
+
+router.get("/counters/for-sale", async (req, res) => {
+  const sales = await CounterSale.findAll({
+    where: { isSold: false },
+    include: [
+      { model: User, attributes: ['id', 'name'] },
+      { model: UserCounter, include: [Counter] }
+    ]
+  });
+  res.status(200).json(sales);
+});
+
+router.post("/fix-usercounters", async (req, res) => {
+  try {
+    // جيب كل UserCounters
+    const userCounters = await UserCounter.findAll();
+
+    let updatedCount = 0;
+
+    for (const userCounter of userCounters) {
+      // جيب بيانات العداد الأصلي
+      const counter = await Counter.findByPk(userCounter.counterId);
+      if (counter) {
+        // حدث بيانات العداد عند المستخدم
+        await userCounter.update({
+          points: counter.points,
+          type: counter.type,
+          price: counter.price
+        });
+        updatedCount++;
+      }
+    }
+
+    res.status(200).json({ 
+      message: `تم تحديث ${updatedCount} عداد بنجاح`
+    });
+
+  } catch (err) {
+    console.error("❌ Error fixing UserCounters:", err);
+    res.status(500).json({ error: "حدث خطأ أثناء تصحيح العدادات" });
+  }
+});
+
+router.delete("/counters/sell/:saleId", upload.none(), async (req, res) => {
+  const { saleId } = req.params;
+  const { userId } = req.body;
+
+  try {
+    const sale = await CounterSale.findOne({
+      where: { id: saleId, userId },
+      include: [{ model: UserCounter }],
+    });
+
+    if (!sale) {
+      return res.status(404).json({ error: "العرض غير موجود أو ليس من حقك حذفه" });
+    }
+
+    await UserCounter.update(
+      {
+        isForSale: false,
+        points: sale.pointsAfterCut,
+      },
+      { where: { id: sale.userCounterId } }
+    );
+
+    await sale.destroy();
+
+    return res.status(200).json({ message: "تم حذف العرض بنجاح" });
+  } catch (error) {
+    console.error("❌ Error deleting counter sale:", error);
+    res.status(500).json({ error: "حدث خطأ أثناء حذف العرض" });
+  }
+});
+
+router.post("/counters/buy", upload.none(), async (req, res) => {
+  const { saleId, buyerId } = req.body;
+
+  try {
+    const sale = await CounterSale.findOne({
+      where: { id: saleId, isSold: false },
+      include: [{ model: UserCounter }]
+    });
+
+    if (!sale) {
+      return res.status(404).json({ error: "العرض غير موجود أو تم بيعه" });
+    }
+
+    const userCounter = sale.UserCounter;
+
+    if (!userCounter) {
+      return res.status(404).json({ error: "العداد المرتبط بهذا العرض غير موجود" });
+    }
+
+    const seller = await User.findByPk(sale.userId);
+    const buyer = await User.findByPk(buyerId);
+
+    if (!buyer) {
+      return res.status(404).json({ error: "المشتري غير موجود" });
+    }
+    if (!seller) {
+      return res.status(404).json({ error: "البائع غير موجود" });
+    }
+
+    if (buyer.sawa < sale.price) {
+      return res.status(400).json({ error: "رصيد المشتري غير كافٍ لإتمام الشراء" });
+    }
+
+    buyer.sawa -= sale.price;
+    seller.sawa += sale.price;
+
+    await buyer.save();
+    await seller.save();
+
+    sale.isSold = true;
+    await sale.save();
+
+    userCounter.userId = buyerId;
+    userCounter.points = sale.pointsAfterCut;
+    userCounter.isForSale = false;
+    await userCounter.save();
+
+    res.status(200).json({ message: "تم شراء العداد ونقله بنجاح", sale });
+
+  } catch (error) {
+    console.error("❌ Error buying counter:", error);
+    res.status(500).json({ error: "خطأ أثناء شراء العداد" });
   }
 });
 
