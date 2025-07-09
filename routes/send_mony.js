@@ -5,7 +5,9 @@ const upload = multer();
 const { User, DailyAction, UserCounter, Counter } = require("../models");
 const { Op } = require("sequelize");
 const TransferHistory = require("../models/transferHistory");
-
+const WithdrawalRequest = require("../models/withdrawalRequest");
+const { sendNotificationToRole } = require("../services/notifications");
+const { sendNotificationToUser } = require("../services/notifications");
 
 router.post("/daily-action", upload.none(), async (req, res) => {
   const { user_id } = req.body;
@@ -276,51 +278,6 @@ router.post("/deposit-jewel", upload.none(), async (req, res) => {
     }
 });
 
-router.post("/deposit-sawa", upload.none(), async (req, res) => {
-    const { userId, amount } = req.body;
-
-    try {
-        const depositAmount = parseFloat(amount);
-
-        if (isNaN(depositAmount)) {
-            return res.status(400).json({ error: "Deposit amount must be a valid number" });
-        }
-
-        if (depositAmount === 0) {
-            return res.status(400).json({ error: "Deposit amount cannot be zero" });
-        }
-
-        // جلب المستخدم
-        const user = await User.findOne({
-            where: { id: userId }
-        });
-
-        if (!user) {
-            return res.status(404).json({ error: "User not found" });
-        }
-
-
-        if (typeof user.sawa === "number" && !isNaN(user.sawa)) {
-          user.sawa += depositAmount;
-        }
-
-        await user.save();
-
-        res.status(200).json({
-            message: `Successfully updated sawa balance by ${depositAmount} for ${user.name}`,
-            user: {
-                id: user.id,
-                name: user.name,
-                newBalance: user.sawa
-            }
-        });
-
-    } catch (err) {
-        console.error("❌ Error during sawa deposit:", err);
-        res.status(500).json({ error: "Internal Server Error" });
-    }
-});
-
 router.post("/deposit-dolar", upload.none(), async (req, res) => {
     const { userId, userEmail, amount } = req.body;
 
@@ -397,6 +354,154 @@ if (typeof user.sawa === "number" && !isNaN(user.sawa)) {
         console.error("❌ Error buying counter:", err);
         res.status(500).json({ error: "Internal Server Error" });
     }
+});
+
+router.post("/deposit-sawa", upload.none(), async (req, res) => {
+    const { userId, amount } = req.body;
+
+    try {
+        const depositAmount = parseFloat(amount);
+
+        if (isNaN(depositAmount)) {
+            return res.status(400).json({ error: "Deposit amount must be a valid number" });
+        }
+
+        if (depositAmount === 0) {
+            return res.status(400).json({ error: "Deposit amount cannot be zero" });
+        }
+
+        // جلب المستخدم
+        const user = await User.findOne({
+            where: { id: userId }
+        });
+
+        if (!user) {
+            return res.status(404).json({ error: "User not found" });
+        }
+
+
+        if (typeof user.sawa === "number" && !isNaN(user.sawa)) {
+          user.sawa += depositAmount;
+        }
+
+        await user.save();
+
+        res.status(200).json({
+            message: `Successfully updated sawa balance by ${depositAmount} for ${user.name}`,
+            user: {
+                id: user.id,
+                name: user.name,
+                newBalance: user.sawa
+            }
+        });
+
+    } catch (err) {
+        console.error("❌ Error during sawa deposit:", err);
+        res.status(500).json({ error: "Internal Server Error" });
+    }
+});
+
+router.post("/withdrawalRequest", upload.none(), async (req, res) => {
+  try {
+    const { userId, amount, method, accountNumber } = req.body;
+
+    if (!userId || !amount || !method || !accountNumber) {
+      return res.status(400).json({ message: "يرجى إدخال جميع الحقول" });
+    }
+
+    
+    const withdrawalAmount = parseFloat(amount);
+    const commission = 100;
+    const totalDeduction = withdrawalAmount + commission;
+
+    if (isNaN(withdrawalAmount) || withdrawalAmount <= 0) {
+      return res.status(400).json({ message: "المبلغ الذي تمتلكه غير كافي" });
+    }
+    const user = await User.findOne({ where: { id: userId } });
+    if (!user) {
+      return res.status(404).json({ message: "المستخدم غير موجود" });
+    }
+
+    if (user.sawa < totalDeduction) {
+      return res.status(400).json({ message: "رصيدك غير كافٍ" });
+    }
+
+    user.sawa -= totalDeduction;
+    await user.save();
+
+    const newRequest = await WithdrawalRequest.create({
+      userId,
+      amount: withdrawalAmount,
+      method,
+      accountNumber
+    });
+
+    await sendNotificationToRole(
+      "admin",
+      `يوجد طلب سحب جديد بمبلغ ${amount} عبر ${method}`,
+      "طلب سحب جديد"
+    );
+
+    res.status(201).json({
+      message: `تم إرسال طلب السحب بنجاح وتم خصم ${totalDeduction} من رصيدك (مبلغ + عمولة)`,
+      newBalance: user.sawa,
+      request: newRequest
+    });
+    } catch (error) {
+    console.error("❌ خطأ أثناء إنشاء طلب السحب:", error);
+    res.status(500).json({ message: "حدث خطأ أثناء الطلب", error: error.message });
+  }
+});
+
+router.get("/withdrawalRequest", async (req, res) => {
+  try {
+    const requests = await WithdrawalRequest.findAll({
+      order: [["createdAt", "DESC"]],
+      include: [
+        {
+          model: User,
+          as: "user",
+          attributes: ["id", "name", "phone", "location", "role"],
+        },
+      ],
+    });
+
+    res.status(200).json({ requests });
+  } catch (error) {
+    console.error("❌ خطأ أثناء جلب السجل:", error);
+    res.status(500).json({ message: "حدث خطأ أثناء جلب السجل", error: error.message });
+  }
+});
+
+router.delete("/withdrawalRequest/:id", async (req, res) => {
+  try {
+    const requestId = req.params.id;
+
+    const request = await WithdrawalRequest.findOne({
+      where: { id: requestId },
+      include: [{ model: User, as: "user" }]
+    });
+
+    if (!request) {
+      return res.status(404).json({ message: "طلب السحب غير موجود" });
+    }
+
+    const user = request.user;
+
+    await request.destroy();
+
+    await sendNotificationToUser(
+      user.id,
+      `تمت معالجة طلب السحب الخاص بك بمبلغ ${request.amount} عبر ${request.method}.`,
+      "إشعار طلب سحب"
+    );
+
+    res.status(200).json({ message: "تم حذف طلب السحب وإبلاغ المستخدم" });
+
+  } catch (error) {
+    console.error("❌ خطأ أثناء حذف الطلب:", error);
+    res.status(500).json({ message: "حدث خطأ أثناء حذف الطلب", error: error.message });
+  }
 });
 
 

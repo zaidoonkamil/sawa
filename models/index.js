@@ -4,26 +4,33 @@ const UserCounter = require("./usercounters");
 const DailyAction = require("./DailyAction");
 const TransferHistory = require("./transferHistory");
 const CounterSale = require("./counterSale");
+const WithdrawalRequest = require("./withdrawalRequest");
 
-User.hasMany(UserCounter, { foreignKey: 'userId' });
-UserCounter.belongsTo(User, { foreignKey: 'userId' });
+User.hasMany(UserCounter, { foreignKey: 'userId', constraints: false });
+UserCounter.belongsTo(User, { foreignKey: 'userId', constraints: false });
 
-Counter.hasMany(UserCounter, { foreignKey: 'counterId' });
-UserCounter.belongsTo(Counter, { foreignKey: 'counterId' });
+Counter.hasMany(UserCounter, { foreignKey: 'counterId', constraints: false });
+UserCounter.belongsTo(Counter, { foreignKey: 'counterId', constraints: false });
 
-User.hasOne(DailyAction, { foreignKey: "user_id" });
-DailyAction.belongsTo(User, { foreignKey: "user_id" });
+User.hasOne(DailyAction, { foreignKey: "user_id", constraints: false });
+DailyAction.belongsTo(User, { foreignKey: "user_id", constraints: false });
 
-User.hasMany(TransferHistory, { as: 'SentTransfers', foreignKey: 'senderId' });
-User.hasMany(TransferHistory, { as: 'ReceivedTransfers', foreignKey: 'receiverId' });
-TransferHistory.belongsTo(User, { as: 'Sender', foreignKey: 'senderId' });
-TransferHistory.belongsTo(User, { as: 'Receiver', foreignKey: 'receiverId' });
+User.hasMany(TransferHistory, { as: 'SentTransfers', foreignKey: 'senderId', constraints: false });
+User.hasMany(TransferHistory, { as: 'ReceivedTransfers', foreignKey: 'receiverId', constraints: false });
+TransferHistory.belongsTo(User, { as: 'Sender', foreignKey: 'senderId', constraints: false });
+TransferHistory.belongsTo(User, { as: 'Receiver', foreignKey: 'receiverId', constraints: false });
 
-UserCounter.hasMany(CounterSale, { foreignKey: 'userCounterId' });
-CounterSale.belongsTo(UserCounter, { foreignKey: 'userCounterId' });
+UserCounter.hasMany(CounterSale, { foreignKey: 'userCounterId', constraints: false });
+CounterSale.belongsTo(UserCounter, { foreignKey: 'userCounterId', constraints: false });
 
-User.hasMany(CounterSale, { foreignKey: 'userId' });
-CounterSale.belongsTo(User, { foreignKey: 'userId' });
+User.hasMany(CounterSale, { foreignKey: 'userId', constraints: false });
+CounterSale.belongsTo(User, { foreignKey: 'userId', constraints: false });
+
+WithdrawalRequest.belongsTo(User, { foreignKey: 'userId', as: 'user', constraints: false });
+User.hasMany(WithdrawalRequest, { foreignKey: 'userId', as: 'withdrawalRequests', constraints: false });
+
+
+
 
 module.exports = {
   User,
@@ -32,4 +39,5 @@ module.exports = {
   UserCounter,
   TransferHistory,
   CounterSale,
+  WithdrawalRequest,
 };

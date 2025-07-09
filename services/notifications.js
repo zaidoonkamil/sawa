@@ -60,7 +60,6 @@ const sendNotificationToRole = async (role, message, title = "Notification") => 
     const playerIds = devices.map(device => device.player_id);
 
     if (playerIds.length === 0) {
-      console.warn(`⚠️ لا توجد أجهزة للمستخدمين برول ${role}`);
       await NotificationLog.create({
         title,
         message,
@@ -93,7 +92,6 @@ const sendNotificationToRole = async (role, message, title = "Notification") => 
       status: "sent"
     });
 
-    console.log(`✅ تم إرسال إشعار لـ ${role}`);
     return { success: true };
 
   } catch (error) {
@@ -109,8 +107,45 @@ const sendNotificationToRole = async (role, message, title = "Notification") => 
   }
 };
 
+const sendNotificationToUser = async (userId, message, title = "Notification") => {
+  if (!message) throw new Error("message مطلوب");
+  if (!userId) throw new Error("userId مطلوب");
+
+  try {
+    const devices = await UserDevice.findAll({
+      where: { user_id: userId }
+    });
+
+    const playerIds = devices.map(device => device.player_id);
+
+    if (playerIds.length === 0) {
+      return { success: false, message: `لا توجد أجهزة للمستخدم ${userId}` };
+    }
+
+    const url = 'https://onesignal.com/api/v1/notifications';
+    const headers = {
+      'Authorization': `Basic ${process.env.ONESIGNAL_API_KEY}`,
+      'Content-Type': 'application/json',
+    };
+    const data = {
+      app_id: process.env.ONESIGNAL_APP_ID,
+      include_player_ids: playerIds,
+      contents: { en: message },
+      headings: { en: title },
+    };
+
+    await axios.post(url, data, { headers });
+
+    return { success: true };
+
+  } catch (error) {
+    console.error(`❌ Error sending notification to user ${userId}:`, error.response ? error.response.data : error.message);
+    return { success: false, error: error.message };
+  }
+};
 
 module.exports = {
   sendNotification,
   sendNotificationToRole,
+  sendNotificationToUser,
 };
