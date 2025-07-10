@@ -409,6 +409,9 @@ router.post("/withdrawalRequest", upload.none(), async (req, res) => {
       return res.status(400).json({ message: "يرجى إدخال جميع الحقول" });
     }
 
+    if (amount <1100){
+      return res.status(400).json({ message: "الحد الادنى للطلب هو 1100" });
+    }
     
     const withdrawalAmount = parseFloat(amount);
     const commission = 100;
