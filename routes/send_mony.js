@@ -425,9 +425,12 @@ router.post("/withdrawalRequest", upload.none(), async (req, res) => {
       return res.status(404).json({ message: "المستخدم غير موجود" });
     }
 
-    if (user.sawa < totalDeduction) {
+    const userBalance = Number(user.sawa); // تحويل الرصيد إلى رقم
+
+    if (userBalance < totalDeduction) {
       return res.status(400).json({ message: "رصيدك غير كافٍ" });
     }
+
 
     user.sawa -= totalDeduction;
     await user.save();
