@@ -409,7 +409,8 @@ router.post("/withdrawalRequest", upload.none(), async (req, res) => {
       return res.status(400).json({ message: "يرجى إدخال جميع الحقول" });
     }
 
-    if (amount <1100){
+    const withdrawalAmountt = parseFloat(amount);
+    if (withdrawalAmountt <1100){
       return res.status(400).json({ message: "الحد الادنى للطلب هو 1100" });
     }
     
@@ -425,7 +426,7 @@ router.post("/withdrawalRequest", upload.none(), async (req, res) => {
       return res.status(404).json({ message: "المستخدم غير موجود" });
     }
 
-    const userBalance = Number(user.sawa); // تحويل الرصيد إلى رقم
+    const userBalance = Number(user.sawa); 
 
     if (userBalance < totalDeduction) {
       return res.status(400).json({ message: "رصيدك غير كافٍ" });
