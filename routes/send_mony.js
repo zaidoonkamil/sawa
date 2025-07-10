@@ -409,14 +409,24 @@ router.post("/withdrawalRequest", upload.none(), async (req, res) => {
       return res.status(400).json({ message: "يرجى إدخال جميع الحقول" });
     }
 
+    if (amount <=1100){
+      return res.status(400).json({ message: "الحد الادنى للطلب هو 1100" });
+    }
     
     const withdrawalAmount = parseFloat(amount);
     const commission = 100;
     const totalDeduction = withdrawalAmount + commission;
 
+
     if (isNaN(withdrawalAmount) || withdrawalAmount <= 0) {
       return res.status(400).json({ message: "المبلغ الذي تمتلكه غير كافي" });
     }
+
+    
+    if (withdrawalAmount < 1100) {
+      return res.status(400).json({ message: "الحد الادنى للطلب هو 1100" });
+    }
+
     const user = await User.findOne({ where: { id: userId } });
     if (!user) {
       return res.status(404).json({ message: "المستخدم غير موجود" });
