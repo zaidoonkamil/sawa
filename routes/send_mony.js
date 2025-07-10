@@ -409,22 +409,15 @@ router.post("/withdrawalRequest", upload.none(), async (req, res) => {
       return res.status(400).json({ message: "يرجى إدخال جميع الحقول" });
     }
 
-    if (amount <=1100){
-      return res.status(400).json({ message: "الحد الادنى للطلب هو 1100" });
-    }
-    
     const withdrawalAmount = parseFloat(amount);
     const commission = 100;
-    const totalDeduction = withdrawalAmount + commission;
-
 
     if (isNaN(withdrawalAmount) || withdrawalAmount <= 0) {
       return res.status(400).json({ message: "المبلغ الذي تمتلكه غير كافي" });
     }
 
-    
-    if (withdrawalAmount < 1100) {
-      return res.status(400).json({ message: "الحد الادنى للطلب هو 1100" });
+    if (withdrawalAmount < commission) {
+      return res.status(400).json({ message: `يجب أن يكون المبلغ أكبر من العمولة ${commission}` });
     }
 
     const user = await User.findOne({ where: { id: userId } });
@@ -432,32 +425,38 @@ router.post("/withdrawalRequest", upload.none(), async (req, res) => {
       return res.status(404).json({ message: "المستخدم غير موجود" });
     }
 
-    if (user.sawa < totalDeduction) {
+    if (user.sawa < withdrawalAmount) {
       return res.status(400).json({ message: "رصيدك غير كافٍ" });
     }
 
-    user.sawa -= totalDeduction;
+    const netAmount = withdrawalAmount - commission;
+
+    if (netAmount < 1100) {
+      return res.status(400).json({ message: "الحد الأدنى للمبلغ الصافي بعد خصم العمولة هو 1100" });
+    }
+
+    user.sawa -= withdrawalAmount;
     await user.save();
 
     const newRequest = await WithdrawalRequest.create({
       userId,
-      amount: withdrawalAmount,
+      amount: netAmount,  
       method,
       accountNumber
     });
 
     await sendNotificationToRole(
       "admin",
-      `يوجد طلب سحب جديد بمبلغ ${amount} عبر ${method}`,
+      `يوجد طلب سحب جديد بمبلغ ${netAmount} عبر ${method}`,
       "طلب سحب جديد"
     );
 
     res.status(201).json({
-      message: `تم إرسال طلب السحب بنجاح وتم خصم ${totalDeduction} من رصيدك (مبلغ + عمولة)`,
+      message: `تم إرسال طلب السحب بنجاح وتم خصم ${withdrawalAmount} من رصيدك (بما يشمل العمولة)`,
       newBalance: user.sawa,
       request: newRequest
     });
-    } catch (error) {
+  } catch (error) {
     console.error("❌ خطأ أثناء إنشاء طلب السحب:", error);
     res.status(500).json({ message: "حدث خطأ أثناء الطلب", error: error.message });
   }
