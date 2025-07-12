@@ -114,24 +114,20 @@ router.post("/login", upload.none(), async (req, res) => {
       return res.status(400).json({ error: "Invalid password" });
     }
 
-    // تحقق من refId إذا كان موجود
     if (refId) {
       const friend = await User.findOne({ where: { id: refId } });
       if (!friend) {
         return res.status(400).json({ error: "Invalid referral code" });
       }
 
-      // تحقق هل المستخدم استخدم إحالة قبل
       const alreadyReferred = await Referrals.findOne({
         where: { referredUserId: user.id }
       });
 
       if (!alreadyReferred) {
-        // أضف 20 لصاحب الكود
-        friend.sawa += 2;
+        friend.sawa += 5;
         await friend.save();
 
-        // سجل إحالة هذا المستخدم
         await Referrals.create({
           referrerId: friend.id,
           referredUserId: user.id
