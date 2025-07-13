@@ -42,4 +42,5 @@ module.exports = {
   TransferHistory,
   CounterSale,
   WithdrawalRequest,
+  UserDevice,
 };

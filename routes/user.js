@@ -1,5 +1,4 @@
 const express = require('express');
-const User = require('../models/user');
 const Referrals = require('../models/referrals');
 const bcrypt = require("bcrypt");
 const saltRounds = 10;
@@ -9,11 +8,34 @@ const dotenv = require('dotenv');
 dotenv.config();
 const multer = require("multer");
 const upload = multer();
+const { User, UserDevice } = require('../models');
 const UserCounter = require("../models/usercounters");
 const Counter = require("../models/counter");
 const { Op } = require("sequelize");
 const CounterSale = require("../models/counterSale");
 
+
+
+router.delete("/users/:id", async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const user = await User.findByPk(id, {
+      include: { model: UserDevice, as: "devices" },
+    });
+
+    if (!user) {
+      return res.status(404).json({ error: "المستخدم غير موجود" });
+    }
+
+    await user.destroy(); 
+
+    res.status(200).json({ message: "تم حذف المستخدم وأجهزته بنجاح" });
+  } catch (err) {
+    console.error("❌ خطأ أثناء الحذف:", err);
+    res.status(500).json({ error: "حدث خطأ أثناء عملية الحذف" });
+  }
+});
 
 router.put("/users/:id/gems", upload.none() , async (req, res) => {
   const { id } = req.params;
@@ -326,27 +348,6 @@ router.get("/users/:id", async (req, res) => {
   }
 });
 
-router.delete("/users/:id", async (req, res) => {
-  const { id } = req.params;
-
-  try {
-    const user = await User.findByPk(id, {
-      include: { model: UserDevice, as: "devices" },
-    });
-
-    if (!user) {
-      return res.status(404).json({ error: "المستخدم غير موجود" });
-    }
-
-    // حذف المستخدم (والأجهزة تلقائيًا بفضل CASCADE)
-    await user.destroy();
-
-    res.status(200).json({ message: "تم حذف المستخدم وأجهزته بنجاح" });
-  } catch (err) {
-    console.error("❌ خطأ أثناء الحذف:", err);
-    res.status(500).json({ error: "حدث خطأ أثناء عملية الحذف" });
-  }
-});
 
 
 module.exports = router;
