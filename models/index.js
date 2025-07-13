@@ -5,6 +5,7 @@ const DailyAction = require("./DailyAction");
 const TransferHistory = require("./transferHistory");
 const CounterSale = require("./counterSale");
 const WithdrawalRequest = require("./withdrawalRequest");
+const UserDevice = require("./user_device");
 
 User.hasMany(UserCounter, { foreignKey: 'userId', constraints: false });
 UserCounter.belongsTo(User, { foreignKey: 'userId', constraints: false });
@@ -29,7 +30,8 @@ CounterSale.belongsTo(User, { foreignKey: 'userId', constraints: false });
 WithdrawalRequest.belongsTo(User, { foreignKey: 'userId', as: 'user', constraints: false });
 User.hasMany(WithdrawalRequest, { foreignKey: 'userId', as: 'withdrawalRequests', constraints: false });
 
-
+User.hasMany(UserDevice, { foreignKey: 'user_id', as: 'devices', onDelete: 'CASCADE' });
+UserDevice.belongsTo(User, { foreignKey: 'user_id', as: 'user', onDelete: 'CASCADE' });
 
 
 module.exports = {

@@ -327,20 +327,26 @@ router.get("/users/:id", async (req, res) => {
 });
 
 router.delete("/users/:id", async (req, res) => {
-    const { id } = req.params;
+  const { id } = req.params;
 
-    try {
-        const user = await User.findByPk(id);
-        if (!user) {
-            return res.status(404).json({ error: "User not found" });
-        }
+  try {
+    const user = await User.findByPk(id, {
+      include: { model: UserDevice, as: "devices" },
+    });
 
-        await user.destroy();
-        res.status(200).json({ message: "User deleted successfully" });
-    } catch (err) {
-        console.error("❌ Error deleting user:", err);
-        res.status(500).json({ error: "Internal Server Error" });
+    if (!user) {
+      return res.status(404).json({ error: "المستخدم غير موجود" });
     }
+
+    // حذف المستخدم (والأجهزة تلقائيًا بفضل CASCADE)
+    await user.destroy();
+
+    res.status(200).json({ message: "تم حذف المستخدم وأجهزته بنجاح" });
+  } catch (err) {
+    console.error("❌ خطأ أثناء الحذف:", err);
+    res.status(500).json({ error: "حدث خطأ أثناء عملية الحذف" });
+  }
 });
+
 
 module.exports = router;
