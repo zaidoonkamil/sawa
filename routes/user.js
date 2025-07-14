@@ -14,20 +14,6 @@ const Counter = require("../models/counter");
 const { Op } = require("sequelize");
 const CounterSale = require("../models/counterSale");
 
-router.put("/users/add-isVerified", async (req, res) => {
-  try {
-    await User.update(
-      { isVerified: false },
-      { where: {} } 
-    );
-
-    res.status(200).json({ message: "تمت إضافة isVerified = false لجميع المستخدمين بنجاح." });
-  } catch (err) {
-    console.error("❌ Error updating users:", err);
-    res.status(500).json({ error: "حدث خطأ أثناء تحديث المستخدمين." });
-  }
-});
-
 
 router.delete("/users/:id", async (req, res) => {
   const { id } = req.params;
@@ -90,42 +76,18 @@ const authenticateToken = (req, res, next) => {
     });
 };
 
-
-
-
-router.get("/verify-token", async (req, res) => {
+router.get("/verify-token", (req, res) => {
   const token = req.headers.authorization;
 
   if (!token) {
     return res.json({ valid: false, message: "Token is missing" });
   }
 
-  jwt.verify(token, process.env.JWT_SECRET, async (err, decoded) => {
+  jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
     if (err) {
       return res.json({ valid: false, message: "Invalid token" });
     }
-
-    try {
-      // تحقق من وجود الحقل isVerified في جدول Users
-      const [results] = await sequelize.query(`
-        SHOW COLUMNS FROM Users LIKE 'isVerified';
-      `);
-
-      if (results.length === 0) {
-        // لو الحقل غير موجود — أضفه
-        await sequelize.query(`
-          ALTER TABLE Users ADD isVerified BOOLEAN NOT NULL DEFAULT false;
-        `);
-        console.log("✅ تم إضافة isVerified إلى جدول Users.");
-      } else {
-        console.log("✅ الحقل isVerified موجود بالفعل.");
-      }
-
-      return res.json({ valid: true, data: decoded });
-    } catch (error) {
-      console.error("❌ Error verifying token or modifying DB:", error);
-      return res.status(500).json({ valid: false, message: "Internal Server Error" });
-    }
+    return res.json({ valid: true, data: decoded });
   });
 });
 
