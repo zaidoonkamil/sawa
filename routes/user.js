@@ -91,18 +91,38 @@ const authenticateToken = (req, res, next) => {
 };
 
 
-router.get("/verify-token", (req, res) => {
+
+router.get("/verify-token", async (req, res) => {
   const token = req.headers.authorization;
 
   if (!token) {
     return res.json({ valid: false, message: "Token is missing" });
   }
 
-  jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
+  jwt.verify(token, process.env.JWT_SECRET, async (err, decoded) => {
     if (err) {
       return res.json({ valid: false, message: "Invalid token" });
     }
-    return res.json({ valid: true, data: decoded });
+
+    try {
+      // تحقق من وجود الحقل isVerified
+      const [results] = await sequelize.query(`
+        SHOW COLUMNS FROM Users LIKE 'isVerified';
+      `);
+
+      if (results.length === 0) {
+        // لو الحقل مش موجود — أضفه
+        await sequelize.query(`
+          ALTER TABLE Users ADD isVerified BOOLEAN NOT NULL DEFAULT false;
+        `);
+        console.log("✅ تم إضافة isVerified إلى جدول Users.");
+      }
+
+      return res.json({ valid: true, data: decoded });
+    } catch (error) {
+      console.error("❌ Error verifying token or modifying DB:", error);
+      return res.status(500).json({ valid: false, message: "Internal Server Error" });
+    }
   });
 });
 
