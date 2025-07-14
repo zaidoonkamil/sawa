@@ -14,6 +14,19 @@ const Counter = require("../models/counter");
 const { Op } = require("sequelize");
 const CounterSale = require("../models/counterSale");
 
+router.put("/users/add-isVerified", async (req, res) => {
+  try {
+    await User.update(
+      { isVerified: false },
+      { where: {} } 
+    );
+
+    res.status(200).json({ message: "تمت إضافة isVerified = false لجميع المستخدمين بنجاح." });
+  } catch (err) {
+    console.error("❌ Error updating users:", err);
+    res.status(500).json({ error: "حدث خطأ أثناء تحديث المستخدمين." });
+  }
+});
 
 
 router.delete("/users/:id", async (req, res) => {
