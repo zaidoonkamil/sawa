@@ -92,6 +92,7 @@ const authenticateToken = (req, res, next) => {
 
 
 
+
 router.get("/verify-token", async (req, res) => {
   const token = req.headers.authorization;
 
@@ -105,17 +106,19 @@ router.get("/verify-token", async (req, res) => {
     }
 
     try {
-      // تحقق من وجود الحقل isVerified
+      // تحقق من وجود الحقل isVerified في جدول Users
       const [results] = await sequelize.query(`
         SHOW COLUMNS FROM Users LIKE 'isVerified';
       `);
 
       if (results.length === 0) {
-        // لو الحقل مش موجود — أضفه
+        // لو الحقل غير موجود — أضفه
         await sequelize.query(`
           ALTER TABLE Users ADD isVerified BOOLEAN NOT NULL DEFAULT false;
         `);
         console.log("✅ تم إضافة isVerified إلى جدول Users.");
+      } else {
+        console.log("✅ الحقل isVerified موجود بالفعل.");
       }
 
       return res.json({ valid: true, data: decoded });
