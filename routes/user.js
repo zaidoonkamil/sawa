@@ -293,23 +293,23 @@ router.post("/users", upload.none() ,async (req, res) => {
 });
 
 router.post("/login", upload.none(), async (req, res) => {
-  const { email, password, refId } = req.body;
+  const { phone , password, refId } = req.body;
 
   try {
-    const user = await User.findOne({ where: { email } });
+    const user = await User.findOne({ where: { phone  } });
     if (!user) {
-      return res.status(400).json({ error: "Invalid email" });
+      return res.status(400).json({ error: "رقم الهاتف غير صحيح" });
     }
 
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
-      return res.status(400).json({ error: "Invalid password" });
+      return res.status(400).json({ error: "كلمة المرور غير صحيحة" });
     }
 
     if (refId) {
       const friend = await User.findOne({ where: { id: refId } });
       if (!friend) {
-        return res.status(400).json({ error: "Invalid referral code" });
+        return res.status(400).json({ error: "كود الإحالة غير صحيح" });
       }
 
       const alreadyReferred = await Referrals.findOne({
@@ -347,8 +347,8 @@ router.post("/login", upload.none(), async (req, res) => {
     });
 
   } catch (err) {
-    console.error("❌ Error logging in:", err);
-    res.status(500).json({ error: "Internal Server Error" });
+    console.error("❌ خطأ أثناء تسجيل الدخول:", err);
+    res.status(500).json({ error: "خطأ داخلي في الخادم" });
   }
 });
 
