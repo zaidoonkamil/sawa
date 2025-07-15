@@ -300,19 +300,27 @@ router.post("/users", upload.none() ,async (req, res) => {
 });
 
 router.post("/login", upload.none(), async (req, res) => {
-  const { phone , password, refId } = req.body;
+  const { email , password, refId } = req.body;
 
   try {
 
-    if (!phone) {
+    /*if (!phone) {
       return res.status(400).json({ error: "يرجى إدخال رقم هاتف صحيح" });
     }
     const normalizedPhone = normalizePhone(phone);
 
-
     const user = await User.findOne({ where: { phone: normalizedPhone } });
     if (!user) {
       return res.status(400).json({ error: "رقم الهاتف غير صحيح" });
+    }*/
+
+    if (!email) {
+      return res.status(400).json({ error: "يرجى إدخال البريد الإلكتروني" });
+    }
+
+    const user = await User.findOne({ where: { email } });
+    if (!user) {
+      return res.status(400).json({ error: "البريد الإلكتروني غير صحيح" });
     }
 
     const isPasswordValid = await bcrypt.compare(password, user.password);
