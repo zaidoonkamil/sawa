@@ -59,9 +59,15 @@ router.post("/send-otp", upload.none(), async (req, res) => {
   const { phone } = req.body;
 
   try {
+
+    const normalizedPhone = normalizePhone(phone);
+    const user = await User.findOne({ where: { phone: normalizedPhone } });
+    if (!user) {
+      return res.status(404).json({ error: "المستخدم غير موجود" });
+    }
+
     const code = generateOtp();
     const expiryDate = new Date(Date.now() + 1 * 60 * 1000);
-    const normalizedPhone = normalizePhone(phone);
 
     await OtpCode.create({ phone: normalizedPhone, code, expiryDate });
 
@@ -115,11 +121,6 @@ router.post("/verify-otp", upload.none(), async (req, res) => {
 
   try {
     const normalizedPhone = normalizePhone(phone);
-
-    const user = await User.findOne({ where: { phone: normalizedPhone } });
-    if (!user) {
-      return res.status(404).json({ error: "المستخدم غير موجود" });
-    }
 
     const otp = await OtpCode.findOne({
       where: {
@@ -269,10 +270,16 @@ router.post("/users", upload.none() ,async (req, res) => {
     try {
         const existingUser = await User.findOne({ where: { email } });
 
+
         if (existingUser) {
             return res.status(400).json({ error: "email already in use" });
         }
-    
+
+        const normalizedPhone = normalizePhone(phone);
+        const existingPhoneUser = await User.findOne({ where: { phone: normalizedPhone } });
+        if (existingPhoneUser) {
+          return res.status(400).json({ error: "رقم الهاتف مستخدم بالفعل" });
+        }
         const hashedPassword = await bcrypt.hash(password, saltRounds);
         const user = await User.create({ name, email, phone, location, password: hashedPassword, role });
 
@@ -280,7 +287,7 @@ router.post("/users", upload.none() ,async (req, res) => {
         id: user.id,
         name: user.name,
         email: user.email,
-        phone: user.phone,
+        phone: normalizedPhone,
         location: user.location,
         role: role,
         createdAt: user.createdAt,
@@ -296,7 +303,9 @@ router.post("/login", upload.none(), async (req, res) => {
   const { phone , password, refId } = req.body;
 
   try {
-    const user = await User.findOne({ where: { phone  } });
+    const normalizedPhone = normalizePhone(phone);
+
+    const user = await User.findOne({ where: { normalizedPhone  } });
     if (!user) {
       return res.status(400).json({ error: "رقم الهاتف غير صحيح" });
     }
