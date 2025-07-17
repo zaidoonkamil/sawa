@@ -549,7 +549,7 @@ router.get("/roleAgents", async (req, res) => {
   try {
     const agents = await User.findAll({
       where: { role: "agent" },
-      attributes: ["id", "name", "phone", "sawa", "note", "createdAt"],
+      attributes: ["id", "name", "phone", "sawa", "location","note", "createdAt"],
       order: [["createdAt", "DESC"]],
     });
 
