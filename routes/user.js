@@ -544,7 +544,7 @@ router.get("/users/:id", async (req, res) => {
 });
 
 
-router.get("/agents", async (req, res) => {
+router.get("/roleAgents", async (req, res) => {
   try {
     const agents = await User.findAll({
       where: { role: "agent" },
