@@ -31,7 +31,7 @@ const User = sequelize.define("User", {
         allowNull: false,
     },
     role: {
-        type: DataTypes.ENUM("user", "admin"), 
+        type: DataTypes.ENUM("user", "admin", "agent"), 
         allowNull: false,
         defaultValue: "user",
     },
@@ -54,6 +54,10 @@ const User = sequelize.define("User", {
         type: DataTypes.BOOLEAN,
         allowNull: false,
         defaultValue: false,
+    },
+    note: {
+    type: DataTypes.TEXT,
+    allowNull: true,
     },
 }, {
     timestamps: true,
