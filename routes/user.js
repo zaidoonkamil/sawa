@@ -153,7 +153,7 @@ router.post("/verify-otp", upload.none(), async (req, res) => {
 });
 
 router.post("/users", upload.none() ,async (req, res) => {
-    const { name, email, location ,password , role = 'user'} = req.body;
+    const { name, email, location ,password , note, role = 'user'} = req.body;
     let phone = req.body.phone;
     try {
         const existingUser = await User.findOne({ where: { email } });
@@ -172,7 +172,7 @@ router.post("/users", upload.none() ,async (req, res) => {
         }
 
         const hashedPassword = await bcrypt.hash(password, saltRounds);
-        const user = await User.create({ name, email, phone, location, password: hashedPassword, role });
+        const user = await User.create({ name, email, phone, location, password: hashedPassword, note: note || null , role });
 
         res.status(201).json({
         id: user.id,
@@ -181,6 +181,7 @@ router.post("/users", upload.none() ,async (req, res) => {
         phone: user.phone,
         location: user.location,
         role: role,
+        note: user.note,
         createdAt: user.createdAt,
         updatedAt: user.updatedAt
      });
