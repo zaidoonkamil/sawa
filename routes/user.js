@@ -15,7 +15,7 @@ const { Op } = require("sequelize");
 const CounterSale = require("../models/counterSale");
 const OtpCode = require("../models/OtpCode");
 const axios = require('axios');
-
+const sequelize = require("../config/db"); 
 
 router.put("/users/alter-table", async (req, res) => {
   try {
