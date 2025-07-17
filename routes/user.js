@@ -472,7 +472,6 @@ router.get("/profile", authenticateToken, async (req, res) => {
 });
 
 
-
 router.get("/users/:id", async (req, res) => {
   const { id } = req.params;
 
@@ -544,6 +543,25 @@ router.get("/users/:id", async (req, res) => {
   }
 });
 
+router.get("/agents", async (req, res) => {
+  try {
+    const agents = await User.findAll({
+      where: {
+        isAgent: true,
+      },
+      attributes: ["id", "name", "phone", "sawa", "note", "createdAt"], 
+      order: [["createdAt", "DESC"]],
+    });
+
+    res.status(200).json({
+      count: agents.length,
+      agents,
+    });
+  } catch (error) {
+    console.error("❌ خطأ في جلب الوكلاء:", error);
+    res.status(500).json({ error: "حدث خطأ أثناء جلب بيانات الوكلاء" });
+  }
+});
 
 
 module.exports = router;
