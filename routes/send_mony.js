@@ -240,6 +240,70 @@ await receiver.save();
   }
 });
 
+router.post("/sendmony-simple", upload.none(), async (req, res) => {
+  const { senderId, receiverId, amount } = req.body;
+
+  try {
+    const transferAmount = parseFloat(amount);
+
+    if (isNaN(transferAmount) || transferAmount <= 0) {
+      return res.status(400).json({ error: "المبلغ غير صالح" });
+    }
+
+    const sender = await User.findByPk(senderId);
+    if (!sender) {
+      return res.status(404).json({ error: "المستخدم المرسل غير موجود" });
+    }
+
+    if (sender.sawa < transferAmount) {
+      return res.status(400).json({ error: "رصيد المرسل غير كافي" });
+    }
+
+    const receiver = await User.findByPk(receiverId);
+    if (!receiver) {
+      return res.status(404).json({ error: "المستلم غير موجود" });
+    }
+
+    // خصم كامل المبلغ من المرسل وإضافته للمستلم بدون عمولة
+    if (typeof sender.sawa === "number" && !isNaN(sender.sawa)) {
+      sender.sawa -= transferAmount;
+    }
+
+    if (typeof receiver.sawa === "number" && !isNaN(receiver.sawa)) {
+      receiver.sawa += transferAmount;
+    }
+
+    await sender.save();
+    await receiver.save();
+
+    // تسجيل العملية في سجل التحويلات بدون عمولة
+    await TransferHistory.create({
+      senderId,
+      receiverId,
+      amount: transferAmount,
+      fee: 0,
+    });
+
+    res.status(200).json({
+      message: `✅ تم تحويل ${transferAmount} sawa من ${sender.name} إلى ${receiver.name}. بدون عمولة.`,
+      sender: {
+        id: sender.id,
+        name: sender.name,
+        balance: sender.sawa,
+      },
+      receiver: {
+        id: receiver.id,
+        name: receiver.name,
+        balance: receiver.sawa,
+      },
+    });
+
+  } catch (err) {
+    console.error("❌ خطأ أثناء التحويل:", err);
+    res.status(500).json({ error: "خطأ في الخادم" });
+  }
+});
+
 router.post("/deposit-jewel", upload.none(), async (req, res) => {
     const { userId, amount } = req.body;
 
@@ -274,45 +338,6 @@ router.post("/deposit-jewel", upload.none(), async (req, res) => {
 
     } catch (err) {
         console.error("❌ Error during jewel deposit:", err);
-        res.status(500).json({ error: "Internal Server Error" });
-    }
-});
-
-router.post("/deposit-dolar", upload.none(), async (req, res) => {
-    const { userId, userEmail, amount } = req.body;
-
-    try {
-        const depositAmount = parseFloat(amount);
-
-        if (isNaN(depositAmount) || depositAmount <= 0) {
-            return res.status(400).json({ error: "Invalid deposit amount" });
-        }
-
-        // جلب المستخدم
-        const user = await User.findOne({
-            where: userId ? { id: userId } : { email: userEmail }
-        });
-
-        if (!user) {
-            return res.status(404).json({ error: "User not found" });
-        }
-
-        // إضافة الدولارات
-        user.dolar += depositAmount;
-
-        await user.save();
-
-        res.status(200).json({
-            message: `Successfully added ${depositAmount} dolar to ${user.name}`,
-            user: {
-                id: user.id,
-                name: user.name,
-                newBalance: user.dolar
-            }
-        });
-
-    } catch (err) {
-        console.error("❌ Error during dolar deposit:", err);
         res.status(500).json({ error: "Internal Server Error" });
     }
 });

@@ -17,47 +17,6 @@ const OtpCode = require("../models/OtpCode");
 const axios = require('axios');
 const sequelize = require("../config/db"); 
 
-router.put("/users/alter-table", async (req, res) => {
-  try {
-    await sequelize.query(`
-      ALTER TABLE Users 
-      MODIFY COLUMN role ENUM('user', 'admin', 'agent') NOT NULL DEFAULT 'user';
-    `);
-
-    await sequelize.query(`
-      ALTER TABLE Users 
-      ADD COLUMN note TEXT NULL;
-    `);
-
-    res.status(200).json({ message: "✅ تم تعديل جدول المستخدمين بنجاح: إضافة الحقل note وتحديث role." });
-  } catch (error) {
-    console.error("❌ خطأ أثناء تعديل الجدول:", error);
-    res.status(500).json({ error: "حدث خطأ أثناء تعديل هيكل جدول المستخدمين." });
-  }
-});
-router.put("/users/set-default-note", async (req, res) => {
-  try {
-    const defaultNote = "لا توجد ملاحظة";
-
-    const [affectedCount] = await User.update(
-      { note: defaultNote },
-      {
-        where: {
-          note: null
-        }
-      }
-    );
-
-    res.status(200).json({
-      message: `✅ تم تحديث ${affectedCount} مستخدم بوضع ملاحظة افتراضية.`,
-    });
-
-  } catch (error) {
-    console.error("❌ خطأ أثناء تحديث الملاحظات:", error);
-    res.status(500).json({ error: "حدث خطأ أثناء تحديث الملاحظات." });
-  }
-});
-
 
 router.post("/normalize-phones", async (req, res) => {
   try {
