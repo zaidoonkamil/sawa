@@ -59,10 +59,10 @@ router.post('/send-notification-to-role', upload.none(), async (req, res) => {
   }
 
   try {
-    // جلب الأجهزة المرتبطة بالمستخدمين حسب الدور المطلوب
     const devices = await UserDevice.findAll({
       include: [{
         model: User,
+        as: 'user',
         where: { role }
       }]
     });
@@ -70,7 +70,6 @@ router.post('/send-notification-to-role', upload.none(), async (req, res) => {
     const playerIds = devices.map(device => device.player_id);
 
     if (playerIds.length === 0) {
-      // نسجل محاولة إرسال فاشلة
       await NotificationLog.create({
         title: title || "Notification",
         message,
@@ -95,7 +94,6 @@ router.post('/send-notification-to-role', upload.none(), async (req, res) => {
 
     await axios.post(url, data, { headers });
 
-    // نسجل الإشعار المرسل
     await NotificationLog.create({
       title: title || "Notification",
       message,
@@ -109,7 +107,6 @@ router.post('/send-notification-to-role', upload.none(), async (req, res) => {
   } catch (error) {
     console.error(`❌ Error sending notification to role ${role}:`, error.response ? error.response.data : error.message);
     
-    // نسجل الخطأ في قاعدة البيانات
     await NotificationLog.create({
       title: title || "Notification",
       message,
