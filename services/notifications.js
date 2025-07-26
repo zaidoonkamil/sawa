@@ -53,6 +53,7 @@ const sendNotificationToRole = async (role, message, title = "Notification") => 
     const devices = await UserDevice.findAll({
       include: [{
         model: User,
+        as: 'user',
         where: { role }
       }]
     });
