@@ -17,6 +17,18 @@ const OtpCode = require("../models/OtpCode");
 const axios = require('axios');
 const sequelize = require("../config/db"); 
 
+router.post("/reset-all-sawa", async (req, res) => {
+  try {
+    const [updatedRows] = await User.update(
+      { sawa: 0 },
+      { where: {} }
+    );
+    res.status(200).json({ message: `تم تصفير رصيد sawa لجميع المستخدمين (${updatedRows} مستخدم).` });
+  } catch (err) {
+    console.error("❌ خطأ أثناء تصفير sawa:", err);
+    res.status(500).json({ error: "حدث خطأ أثناء تصفير sawa." });
+  }
+});
 
 router.post("/normalize-phones", async (req, res) => {
   try {
@@ -267,6 +279,7 @@ router.get("/verify-token", (req, res) => {
   });
 });
 
+/*
 router.post("/users", upload.none() ,async (req, res) => {
     const { name, email, phone , location ,password , role = 'user'} = req.body;
     
@@ -300,7 +313,7 @@ router.post("/users", upload.none() ,async (req, res) => {
         console.error("❌ Error creating user:", err);
         res.status(500).json({ error: "Internal Server Error" });
     }
-});
+});*/
 
 router.post("/login", upload.none(), async (req, res) => {
   const { email , password, refId } = req.body;
@@ -407,7 +420,7 @@ router.get("/profile", authenticateToken, async (req, res) => {
             {
               model: CounterSale,
               where: { isSold: false },
-              required: false, // حتى لو ما عنده عرض بيع ما يطرد المستخدم
+              required: false, 
             },
           ],
         },
@@ -420,7 +433,6 @@ router.get("/profile", authenticateToken, async (req, res) => {
 
     const userData = user.toJSON();
 
-    // حساب الأيام المتبقية لكل عداد
     userData.UserCounters = userData.UserCounters.map((counter) => {
       if (counter.endDate) {
         const now = new Date();
@@ -436,8 +448,7 @@ router.get("/profile", authenticateToken, async (req, res) => {
       return { ...counter, remainingDays: null };
     });
 
-    // تحويل الساوا للدولار
-    userData.dolar = userData.sawa * 10;
+    userData.dolar = Number((userData.sawa * 1.25).toFixed(2))
 
     let totalPoints = 0;
     let totalGems = 0;
@@ -485,7 +496,6 @@ router.get("/users/:id", async (req, res) => {
 
     const userData = user.toJSON();
 
-    // حساب عدد الأيام المتبقية للعدادات
     userData.UserCounters = userData.UserCounters.map(counter => {
       if (counter.endDate) {
         const now = new Date();
@@ -505,10 +515,9 @@ router.get("/users/:id", async (req, res) => {
       }
     });
 
-    // حساب الدولار بناءً على الساوا
-    userData.dolar = (userData.sawa * 0.010).toFixed(2);
+    userData.dolar = Number((userData.sawa * 1.25).toFixed(2))
 
-    // حساب مجموع points و gems من UserCounters
+
     let totalPoints = 0;
     let totalGems = 0;
 
@@ -522,7 +531,6 @@ router.get("/users/:id", async (req, res) => {
       }
     });
 
-    // أضف المجموع إلى الرد
     userData.totalPoints = totalPoints;
     userData.totalGems = totalGems;
 

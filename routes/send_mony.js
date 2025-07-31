@@ -435,14 +435,9 @@ router.post("/withdrawalRequest", upload.none(), async (req, res) => {
     }
 
     const withdrawalAmount = parseFloat(amount);
-    const commission = 100;
 
     if (isNaN(withdrawalAmount) || withdrawalAmount <= 0) {
       return res.status(400).json({ message: "المبلغ الذي تمتلكه غير كافي" });
-    }
-
-    if (withdrawalAmount < commission) {
-      return res.status(400).json({ message: `يجب أن يكون المبلغ أكبر من العمولة ${commission}` });
     }
 
     const user = await User.findOne({ where: { id: userId } });
@@ -456,8 +451,8 @@ router.post("/withdrawalRequest", upload.none(), async (req, res) => {
 
     const netAmount = withdrawalAmount - commission;
 
-    if (netAmount < 1100) {
-      return res.status(400).json({ message: "الحد الأدنى للمبلغ الصافي بعد خصم العمولة هو 1100" });
+    if (netAmount < 6400) {
+      return res.status(400).json({ message: "الحد الأدنى للمبلغ الصافي بعد خصم العمولة هو 6400" });
     }
 
     user.sawa -= withdrawalAmount;
