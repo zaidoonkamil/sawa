@@ -428,6 +428,7 @@ router.post("/deposit-sawa", upload.none(), async (req, res) => {
 
 router.post("/withdrawalRequest", upload.none(), async (req, res) => {
   try {
+    const commission = 0;
     const { userId, amount, method, accountNumber } = req.body;
 
     if (!userId || !amount || !method || !accountNumber) {
