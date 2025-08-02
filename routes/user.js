@@ -18,7 +18,7 @@ const axios = require('axios');
 const sequelize = require("../config/db"); 
 
 
-router.post('/admin/reset-password', async (req, res) => {
+router.post('/admin/reset-password', upload.none(), async (req, res) => {
   try {
     const { email, newPassword } = req.body;
 
