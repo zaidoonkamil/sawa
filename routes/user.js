@@ -17,6 +17,31 @@ const OtpCode = require("../models/OtpCode");
 const axios = require('axios');
 const sequelize = require("../config/db"); 
 
+
+router.post('/admin/reset-password', async (req, res) => {
+  try {
+    const { email, newPassword } = req.body;
+
+    if (!email || !newPassword) {
+      return res.status(400).json({ message: 'يرجى إدخال البريد الإلكتروني وكلمة المرور الجديدة' });
+    }
+
+    const user = await User.findOne({ where: { email } });
+    if (!user) {
+      return res.status(404).json({ message: 'المستخدم غير موجود' });
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    user.password = hashedPassword;
+    await user.save();
+
+    return res.json({ message: 'تم تحديث كلمة المرور بنجاح ✅' });
+  } catch (error) {
+    console.error('خطأ:', error);
+    return res.status(500).json({ message: 'حدث خطأ في السيرفر' });
+  }
+});
+
 router.post("/reset-all-sawa", async (req, res) => {
   try {
     const [updatedRows] = await User.update(
