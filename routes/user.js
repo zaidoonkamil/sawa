@@ -19,6 +19,7 @@ const sequelize = require("../config/db");
 const nodemailer = require('nodemailer');
 
 
+
 router.post('/admin/reset-password', upload.none(), async (req, res) => {
   try {
     const { email, newPassword } = req.body;
@@ -177,101 +178,6 @@ function normalizePhone(phone) {
   }
   return phone;
 }
-
-router.post("/send-otp", upload.none(), async (req, res) => {
-  const { phone } = req.body;
-
-  try {
-
-    const normalizedPhone = normalizePhone(phone);
-    const user = await User.findOne({ where: { phone: normalizedPhone } });
-    if (!user) {
-      return res.status(404).json({ error: "المستخدم غير موجود" });
-    }
-
-    const code = generateOtp();
-    const expiryDate = new Date(Date.now() + 1 * 60 * 1000);
-
-    await OtpCode.create({ phone: normalizedPhone, code, expiryDate });
-
-    const messagePayload = {
-      messaging_product: "whatsapp",
-      to: normalizedPhone,
-      type: "template",
-      template: {
-        name: "otp",
-        language: { code: "ar" },
-        components: [
-          {
-            type: "body",
-            parameters: [{ type: "text", text: code.toString() }],
-          },
-          {
-            type: "button",
-            sub_type: "url",
-            index: "0",
-            parameters: [{ type: "text", text: code.toString() }],
-          },
-        ],
-      },
-    };
-
-    await axios.post(
-      `https://graph.facebook.com/v19.0/${process.env.WHATSAPP_PHONE_NUMBER_ID}/messages`,
-      messagePayload,
-      {
-        headers: {
-          Authorization: `Bearer ${process.env.WHATSAPP_ACCESS_TOKEN}`,
-          "Content-Type": "application/json",
-        },
-      }
-    );
-
-    res.status(200).json({ message: "تم إرسال كود التحقق بنجاح" });
-
-  } catch (error) {
-    if (error.response) {
-      console.error("❌ خطأ في إرسال كود التحقق:", error.response.data);
-    } else {
-      console.error("❌ خطأ في إرسال كود التحقق:", error.message);
-    }
-    res.status(500).json({ error: "حدث خطأ أثناء إرسال كود التحقق" });
-  }
-});
-
-router.post("/verify-otp", upload.none(), async (req, res) => {
-  let { phone, code } = req.body;
-
-  try {
-    const normalizedPhone = normalizePhone(phone);
-
-    const otp = await OtpCode.findOne({
-      where: {
-        phone: normalizedPhone,
-        code,
-        isUsed: false,
-        expiryDate: { [Op.gt]: new Date() },
-      },
-    });
-
-    if (!otp) {
-      return res.status(400).json({ error: "كود تحقق غير صالح أو منتهي" });
-    }
-
-    otp.isUsed = true;
-    await otp.save();
-
-    user.isVerified = true;
-    await user.save();
-
-    console.log("✅ User verified:", normalizedPhone);
-    res.status(200).json({ message: "تم تفعيل الحساب بنجاح" });
-
-  } catch (err) {
-    console.error("❌ خطأ أثناء التحقق من الكود:", err);
-    res.status(500).json({ error: "حدث خطأ داخلي في الخادم" });
-  }
-});
 
 router.post("/users", upload.none() ,async (req, res) => {
     const { name, email, location ,password , note, role = 'user'} = req.body;
