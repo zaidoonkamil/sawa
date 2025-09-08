@@ -16,6 +16,7 @@ const CounterSale = require("../models/counterSale");
 const OtpCode = require("../models/OtpCode");
 const axios = require('axios');
 const sequelize = require("../config/db"); 
+const nodemailer = require('nodemailer');
 
 
 router.post('/admin/reset-password', upload.none(), async (req, res) => {
@@ -467,7 +468,7 @@ router.post("/login", upload.none(), async (req, res) => {
       user.isLoggedIn = true;
       await user.save();
     }
-    
+
     const token = generateToken(user);
 
     res.status(200).json({
