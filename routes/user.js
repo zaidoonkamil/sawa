@@ -218,6 +218,46 @@ router.post("/users", upload.none() ,async (req, res) => {
     }
 });
 
+router.post("/adminUsers", upload.none() ,async (req, res) => {
+    const { name, email, location ,password , note, role = 'user'} = req.body;
+    let phone = req.body.phone;
+    try {
+        const existingUser = await User.findOne({ where: { email } });
+
+        if (phone.startsWith("0")) {
+          phone = "964" + phone.slice(1);
+        }
+
+        if (existingUser) {
+            return res.status(400).json({ error: "عنوان البريد الإلكتروني مستخدم مسبقًا" });
+        }
+    
+        const existingPhone = await User.findOne({ where: { phone } });
+        if (existingPhone) {
+          return res.status(400).json({ error: "هذا الهاتف قيد الاستخدام بالفعل" });
+        }
+
+        const hashedPassword = await bcrypt.hash(password, saltRounds);
+        const user = await User.create({ name, email, phone,isVerified:true, location, password: hashedPassword, note: note || null , role });
+
+        res.status(201).json({
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        phone: user.phone,
+        location: user.location,
+        isVerified: true,
+        role: role,
+        note: user.note,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt
+     });
+    } catch (err) {
+        console.error("❌ Error creating user:", err);
+        res.status(500).json({ error: "Internal Server Error" });
+    }
+});
+
 const generateToken = (user) => {
     return jwt.sign(
         { id: user.id, email: user.email, role: user.role },
