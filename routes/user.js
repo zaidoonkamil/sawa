@@ -200,12 +200,12 @@ router.post("/users", upload.none() ,async (req, res) => {
         }
 
         if (existingUser) {
-            return res.status(400).json({ error: "email already in use" });
+            return res.status(400).json({ error: "عنوان البريد الإلكتروني مستخدم مسبقًا" });
         }
     
         const existingPhone = await User.findOne({ where: { phone } });
         if (existingPhone) {
-          return res.status(400).json({ error: "phone already in use" });
+          return res.status(400).json({ error: "هذا الهاتف قيد الاستخدام بالفعل" });
         }
 
         const hashedPassword = await bcrypt.hash(password, saltRounds);
