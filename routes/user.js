@@ -468,7 +468,7 @@ router.get("/profile", authenticateToken, async (req, res) => {
       return { ...counter, remainingDays: null };
     });
 
-    userData.dolar = Number((userData.sawa * 1.25).toFixed(2))
+    userData.dolar = Number((userData.sawa * 1.00).toFixed(2))
 
     let totalPoints = 0;
     let totalGems = 0;
@@ -535,7 +535,7 @@ router.get("/users/:id", async (req, res) => {
       }
     });
 
-    userData.dolar = Number((userData.sawa * 1.25).toFixed(2))
+    userData.dolar = Number((userData.sawa * 1.00).toFixed(2))
 
 
     let totalPoints = 0;
