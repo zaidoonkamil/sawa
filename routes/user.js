@@ -83,9 +83,92 @@ router.post("/normalize-phones", async (req, res) => {
   }
 });
 
-function generateOtp() {
-  return Math.floor(1000 + Math.random() * 9000).toString();
-}
+const transporter = nodemailer.createTransport({
+  service: "gmail",
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS,
+  },
+});
+
+router.post("/otp/generate", upload.none(), async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({ error: "يجب إدخال البريد الإلكتروني" });
+    }
+
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+
+    const expiryDate = new Date(Date.now() + 2 * 60 * 1000);
+
+    await OtpCode.create({
+      email,
+      code: otp,
+      expiryDate,
+    });
+
+    await transporter.sendMail({
+      from: `"فلس" <${process.env.EMAIL_USER}>`,
+      to: email,
+      subject: "رمز التحقق OTP",
+      text: `رمز التحقق الخاص بك هو: ${otp} صالح لمدة دقيقتين.`,
+    });
+
+    return res.status(201).json({
+      message: "تم إرسال OTP إلى البريد الإلكتروني",
+    });
+  } catch (err) {
+    console.error("❌ Error generating OTP:", err);
+    return res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
+router.post("/otp/verify", upload.none(), async (req, res) => {
+  try {
+    const { email, code } = req.body;
+
+    if (!email || !code) {
+      return res.status(400).json({ error: "البريد الإلكتروني والكود مطلوبان" });
+    }
+
+    const otpRecord = await OtpCode.findOne({
+      where: { email, code, isUsed: false }
+    });
+
+    if (!otpRecord) {
+      return res.status(400).json({ error: "OTP غير صحيح" });
+    }
+
+    if (otpRecord.expiryDate < new Date()) {
+      return res.status(400).json({ error: "انتهت صلاحية OTP" });
+    }
+
+    otpRecord.isUsed = true;
+    await otpRecord.save();
+
+    const user = await User.findOne({ where: { email } });
+    if (user) {
+      user.isVerified = true;
+      await user.save();
+    }
+
+    return res.status(200).json({ 
+      message: "تم التحقق من OTP بنجاح",
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        phone: user.phone,
+        isVerified: user.isVerified
+      }
+    });
+  } catch (err) {
+    console.error("❌ Error verifying OTP:", err);
+    return res.status(500).json({ error: "Internal Server Error" });
+  }
+});
 
 function normalizePhone(phone) {
   if (phone.startsWith('0')) {
@@ -380,6 +463,11 @@ router.post("/login", upload.none(), async (req, res) => {
       }
     }
 
+    if (user.isVerified) {
+      user.isLoggedIn = true;
+      await user.save();
+    }
+    
     const token = generateToken(user);
 
     res.status(200).json({

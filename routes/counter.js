@@ -65,8 +65,8 @@ if (typeof user.sawa === "number" && !isNaN(user.sawa)) {
 }    await user.save();
 
     const now = new Date();
-    const oneYearLater = new Date();
-    oneYearLater.setFullYear(oneYearLater.getFullYear() + 1);
+    const threeYearsLater = new Date();
+    threeYearsLater.setFullYear(threeYearsLater.getFullYear() + 3);
 
     const assign = await UserCounter.create({
       userId,
@@ -75,7 +75,7 @@ if (typeof user.sawa === "number" && !isNaN(user.sawa)) {
       type: counter.type,
       price: counter.price,
       startDate: now,
-      endDate: oneYearLater
+      endDate: threeYearsLater
     });
 
     res.status(201).json({
