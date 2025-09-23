@@ -172,6 +172,30 @@ router.post("/otp/verify", upload.none(), async (req, res) => {
   }
 });
 
+router.post('/admin/reset-password', upload.none(), async (req, res) => {
+  try {
+    const { email, newPassword } = req.body;
+
+    if (!email || !newPassword) {
+      return res.status(400).json({ message: 'يرجى إدخال البريد الإلكتروني وكلمة المرور الجديدة' });
+    }
+
+    const user = await User.findOne({ where: { email } });
+    if (!user) {
+      return res.status(404).json({ message: 'المستخدم غير موجود' });
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    user.password = hashedPassword;
+    await user.save();
+
+    return res.json({ message: 'تم تحديث كلمة المرور بنجاح ✅' });
+  } catch (error) {
+    console.error('خطأ:', error);
+    return res.status(500).json({ message: 'حدث خطأ في السيرفر' });
+  }
+});
+
 function normalizePhone(phone) {
   if (phone.startsWith('0')) {
     return '964' + phone.slice(1);
