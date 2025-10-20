@@ -179,6 +179,7 @@ function normalizePhone(phone) {
   return phone;
 }
 
+/*
 router.post("/users", upload.none() ,async (req, res) => {
     const { name, email, location ,password , note, role = 'user'} = req.body;
     let phone = req.body.phone;
@@ -217,6 +218,7 @@ router.post("/users", upload.none() ,async (req, res) => {
         res.status(500).json({ error: "Internal Server Error" });
     }
 });
+*/
 
 router.post("/adminUsers", upload.none() ,async (req, res) => {
     const { name, email, location ,password , note, role = 'user'} = req.body;

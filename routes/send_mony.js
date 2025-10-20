@@ -8,7 +8,7 @@ const TransferHistory = require("../models/transferHistory");
 const WithdrawalRequest = require("../models/withdrawalRequest");
 const { sendNotificationToRole } = require("../services/notifications");
 const { sendNotificationToUser } = require("../services/notifications");
-
+/*
 router.post("/daily-action", upload.none(), async (req, res) => {
   const { user_id } = req.body;
 
@@ -94,7 +94,7 @@ router.post("/daily-action", upload.none(), async (req, res) => {
     res.status(500).json({ error: "حدث خطأ أثناء تنفيذ العملية" });
   }
 });
-
+*/
 router.get("/daily-action/:user_id", async (req, res) => {
   const { user_id } = req.params;
 
@@ -341,7 +341,7 @@ router.post("/deposit-jewel", upload.none(), async (req, res) => {
         res.status(500).json({ error: "Internal Server Error" });
     }
 });
-
+/*
 router.post("/buy-counter", upload.none(), async (req, res) => {
     const { userId, counterId } = req.body;
 
@@ -380,7 +380,7 @@ if (typeof user.sawa === "number" && !isNaN(user.sawa)) {
         res.status(500).json({ error: "Internal Server Error" });
     }
 });
-
+*/
 router.post("/deposit-sawa", upload.none(), async (req, res) => {
     const { userId, amount } = req.body;
 

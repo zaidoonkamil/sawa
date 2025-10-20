@@ -41,7 +41,7 @@ router.get("/counters", async (req, res) => {
         res.status(500).json({ error: "Internal Server Error" });
     }
 });
-
+/*
 router.post("/assign-counter", upload.none(), async (req, res) => {
   const { userId, counterId } = req.body;
 
@@ -89,7 +89,7 @@ if (typeof user.sawa === "number" && !isNaN(user.sawa)) {
     res.status(500).json({ error: "Internal Server Error" });
   }
 });
-
+*/
 router.delete("/counters/:id", async (req, res) => {
   const { id } = req.params;
 
@@ -109,7 +109,7 @@ router.delete("/counters/:id", async (req, res) => {
     res.status(500).json({ error: "حدث خطأ أثناء تعطيل العداد" });
   }
 });
-
+/*
 router.post("/counters/sell", upload.none(), async (req, res) => {
   const { userId, userCounterId, price } = req.body;
 
@@ -310,6 +310,6 @@ router.post("/counters/buy", upload.none(), async (req, res) => {
     res.status(500).json({ error: "خطأ أثناء شراء العداد" });
   }
 });
-
+*/
 
 module.exports = router;
