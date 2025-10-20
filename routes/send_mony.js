@@ -8,6 +8,7 @@ const TransferHistory = require("../models/transferHistory");
 const WithdrawalRequest = require("../models/withdrawalRequest");
 const { sendNotificationToRole } = require("../services/notifications");
 const { sendNotificationToUser } = require("../services/notifications");
+
 /*
 router.post("/daily-action", upload.none(), async (req, res) => {
   const { user_id } = req.body;
@@ -95,6 +96,7 @@ router.post("/daily-action", upload.none(), async (req, res) => {
   }
 });
 */
+
 router.get("/daily-action/:user_id", async (req, res) => {
   const { user_id } = req.params;
 
@@ -145,6 +147,7 @@ router.get("/daily-action/:user_id", async (req, res) => {
   }
 });
 
+/*
 router.post("/sendmony", upload.none(), async (req, res) => {
   const { senderId, receiverId, amount } = req.body;
 
@@ -239,6 +242,7 @@ await receiver.save();
     res.status(500).json({ error: "خطأ في الخادم" });
   }
 });
+*/
 
 router.post("/sendmony-simple", upload.none(), async (req, res) => {
   const { senderId, receiverId, amount } = req.body;
